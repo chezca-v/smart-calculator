@@ -1,60 +1,44 @@
-# Smart Arithmetic Calculator - Object-Oriented Version
+# =========================
+# FILE: paradigms/oop_calculator.py
+# =========================
 
 class Calculator:
-    def __init__(self, num1, num2):
-        self.num1 = num1
-        self.num2 = num2
+    def __init__(self):
+        self.num1 = 0.0
+        self.num2 = 0.0
 
-    def add(self):
-        return self.num1 + self.num2
-
-    def subtract(self):
-        return self.num1 - self.num2
-
-    def multiply(self):
-        return self.num1 * self.num2
+    def add(self):        return self.num1 + self.num2
+    def subtract(self):   return self.num1 - self.num2
+    def multiply(self):   return self.num1 * self.num2
 
     def divide(self):
         if self.num2 == 0:
-            return "Error: Division by zero is not allowed."
+            raise ValueError("Division by zero is not allowed.")
         return self.num1 / self.num2
 
     def modulus(self):
         if self.num2 == 0:
-            return "Error: Modulus by zero is not allowed."
+            raise ValueError("Modulus by zero is not allowed.")
         return self.num1 % self.num2
 
+    def calculate(self, expression: str) -> float:
+        parts = expression.strip().split()
+        if len(parts) != 3:
+            raise ValueError("Invalid format. Use 'num op num'.")
+        try:
+            self.num1 = float(parts[0])
+            op = parts[1]
+            self.num2 = float(parts[2])
+        except ValueError:
+            raise ValueError("Invalid numbers in expression.")
 
-def main():
-    print("=== Smart Arithmetic Calculator (OOP) ===")
-
-    try:
-        num1 = float(input("Enter first number: "))
-        num2 = float(input("Enter second number: "))
-    except ValueError:
-        print("Error: Please enter valid numeric values.")
-        return
-
-    operation = input("Choose operation (+, -, *, /, %): ")
-
-    calculator = Calculator(num1, num2)
-
-    if operation == "+":
-        result = calculator.add()
-    elif operation == "-":
-        result = calculator.subtract()
-    elif operation == "*":
-        result = calculator.multiply()
-    elif operation == "/":
-        result = calculator.divide()
-    elif operation == "%":
-        result = calculator.modulus()
-    else:
-        print("Invalid operation selected.")
-        return
-
-    print("Result:", result)
-
-
-if _name_ == "_main_":
-    main()
+        ops = {
+            '+': self.add,
+            '-': self.subtract,
+            '*': self.multiply,
+            '/': self.divide,
+            '%': self.modulus,
+        }
+        if op not in ops:
+            raise ValueError(f"Unsupported operator: {op}")
+        return ops[op]()
