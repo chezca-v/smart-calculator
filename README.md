@@ -1,70 +1,56 @@
-# 📱 Smart Arithmetic Calculator (Kivy Mobile App)
+# Smart Calculator — Multi-Paradigm Kivy App
 
-A simple mobile calculator built using **Python** and **Kivy**.  
-This app supports basic arithmetic operations:
+## Project Structure
 
-- Addition (+)
-- Subtraction (-)
-- Multiplication (*)
-- Division (/)
-- Modulus (%)
+```
+SmartCalculator/
+├── ui/
+│   └── main.py                  # Kivy UI entry point
+├── paradigms/
+│   ├── procedural.py            # Procedural paradigm
+│   ├── oop_calculator.py        # OOP paradigm (Calculator class)
+│   ├── functional.py            # Functional paradigm
+│   └── event_driven.py          # Event-driven paradigm
+├── extras/
+│   └── additional_features.py  # Extended math + history
+└── README.md
+```
 
-The project demonstrates:
-- Event-Driven Programming
-- Mobile Application Development using Python
-- APK Packaging using Buildozer
+## How to Run
 
----
-
-## 🚀 Features
-
-- Two numeric input fields
-- Touch-friendly operation buttons
-- Real-time result display
-- Division by zero handling
-- Invalid input handling
-
----
-
-## 🛠️ Tech Stack
-
-- Python 3.x
-- Kivy
-- Buildozer (for Android APK generation)
-- Git (Version Control)
-
----
-
-## 💻 Running Locally (Desktop)
-
-1. Install Python (3.9–3.11 recommended)
-2. Install Kivy:
-
+```bash
 pip install kivy
+python ui/main.py
+```
 
-3. Run the app:
-python main.py
+## How to Build APK (Buildozer)
 
----
-
-## 📱 Building the APK (Android)
-
-⚠️ Requires Linux or WSL (Windows Subsystem for Linux)
-
-1. Install dependencies:
-sudo apt update
-sudo apt install -y python3-pip git zip unzip openjdk-17-jdk
+```bash
 pip install buildozer
-
-2. Initialize buildozer:
 buildozer init
+# Edit buildozer.spec: set source.dir = . and source.include_exts = py,kv
+buildozer android debug
+```
 
-3. Build the APK:
-buildozer -v android debug
+## Features
 
-4. The generated APK will be inside:
-bin/
+- **4 Paradigms**: Switch via Spinner — Procedural, OOP, Functional, Event-Driven
+- **Extended Mode**: Supports `^` (exponentiation), `√` (square root), `%` (percentage)
+- **Dark / Light Theme**: Toggle with ☀/🌙 button
+- **Expression display**: Shows expression above result, like a real calculator
+- **Error handling**: Displays errors inline, no crashes
+- **History**: Tracked in `additional_features` module (call `get_history()`)
 
-## 👩🏻‍💻 Authors
-Banayad, Escaño, Esteban, Frigillana, Lanuza, Sanchez
+## Paradigm Signatures
 
+All paradigms expose:
+```python
+def calculate(expression: str) -> float
+# expression format: "num op num"  e.g. "12 * 5000"
+```
+
+OOP additionally usable as:
+```python
+calc = Calculator()
+calc.calculate("10 + 5")  # -> 15.0
+```
