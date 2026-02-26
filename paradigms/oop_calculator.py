@@ -1,7 +1,3 @@
-# =========================
-# FILE: paradigms/oop_calculator.py
-# =========================
-
 class Calculator:
     def __init__(self):
         self.num1 = 0.0
