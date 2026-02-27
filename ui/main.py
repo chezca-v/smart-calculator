@@ -760,8 +760,9 @@ class CalcPage(BoxLayout):
 # ──────────────────────────────────────────────────────────────
 class TabBar(BoxLayout):
     def __init__(self, t, on_tab, **kw):
-        super().__init__(orientation='horizontal',
-                         size_hint=(1,None), height=dp(44), **kw)
+        kw.setdefault('size_hint', (1, None))
+        kw.setdefault('height', dp(44))
+        super().__init__(orientation='horizontal', **kw)
         self._t      = t
         self._on_tab = on_tab
         self._btns   = {}
@@ -829,8 +830,7 @@ class CalqRoot(FloatLayout):
                                 size_hint=(1,1), pos=(0,0))
 
         # tab bar
-        self._tabs = TabBar(self._t, self._on_tab,
-                            size_hint=(1,None))
+        self._tabs = TabBar(self._t, self._on_tab)
         self._shell.add_widget(self._tabs)
 
         # pages container
