@@ -1,438 +1,353 @@
-# =========================
-# FILE: ui/main.py
-# =========================
-
-import sys
-import os
+import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-from kivy.uix.spinner import Spinner
 from kivy.uix.widget import Widget
-from kivy.graphics import Color, RoundedRectangle, Rectangle
+from kivy.graphics import Color, Ellipse, Rectangle, RoundedRectangle
 from kivy.core.window import Window
 from kivy.metrics import dp
 from kivy.utils import get_color_from_hex
-from kivy.properties import StringProperty, BooleanProperty
-from kivy.clock import Clock
+from kivy.properties import BooleanProperty
 
-import paradigms.procedural as procedural
-import paradigms.functional as functional
-import paradigms.event_driven as event_driven
-from paradigms.oop_calculator import Calculator
-from extras.additional_features import (
-    exponentiate, square_root, percentage,
-    get_history, clear_history
-)
+import paradigms.procedural    as procedural
+import paradigms.functional    as functional
+import paradigms.event_driven  as event_driven
+from paradigms.oop_calculator   import Calculator
+from extras.additional_features import square_root
 
-Window.size = (390, 780)
+Window.size = (400, 760)
 
-# ── Themes ───────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
+#  PALETTES
+# ─────────────────────────────────────────────────────────────
 DARK = {
-    'bg':          '#1C2B3A',
-    'display_bg':  '#152231',
-    'btn_num':     '#243447',
+    'bg':          '#1B2F3F',
+    'btn_num':     '#243548',
+    'btn_fn':      '#2E4255',
     'btn_op':      '#F5A623',
-    'btn_fn':      '#2E3F52',
     'btn_eq':      '#F5A623',
-    'btn_ac':      '#2E3F52',
-    'text_main':   '#FFFFFF',
-    'text_expr':   '#7A8FA0',
+    'text_result': '#FFFFFF',
+    'text_expr':   '#4A6880',
+    'text_num':    '#FFFFFF',
+    'text_fn':     '#C0D2E0',
     'text_op':     '#FFFFFF',
-    'text_fn':     '#CBD8E3',
-    'spinner_bg':  '#2E3F52',
-    'spinner_text':'#CBD8E3',
-    'toggle_bg':   '#2E3F52',
-    'shadow':      (0, 0, 0, 0.4),
+    'toggle_icon': '☀',
 }
 LIGHT = {
-    'bg':          '#F0F4F8',
-    'display_bg':  '#FFFFFF',
+    'bg':          '#E8EDF2',
     'btn_num':     '#FFFFFF',
+    'btn_fn':      '#D2DCE8',
     'btn_op':      '#F5A623',
-    'btn_fn':      '#DDE5EE',
     'btn_eq':      '#F5A623',
-    'btn_ac':      '#DDE5EE',
-    'text_main':   '#1C2B3A',
-    'text_expr':   '#8899AA',
+    'text_result': '#1B2F3F',
+    'text_expr':   '#8FA8BC',
+    'text_num':    '#1B2F3F',
+    'text_fn':     '#3A5266',
     'text_op':     '#FFFFFF',
-    'text_fn':     '#3D5066',
-    'spinner_bg':  '#FFFFFF',
-    'spinner_text':'#1C2B3A',
-    'toggle_bg':   '#DDE5EE',
-    'shadow':      (0, 0, 0, 0.12),
+    'toggle_icon': '🌙',
 }
 
-
-def hex_rgba(h, a=1.0):
-    c = get_color_from_hex(h)
-    return (c[0], c[1], c[2], a)
+_OOP = Calculator()
 
 
-class RoundButton(Button):
-    def __init__(self, bg_hex='#243447', text_hex='#FFFFFF',
-                 radius=18, font_size_val=22, **kwargs):
-        super().__init__(**kwargs)
-        self.bg_hex = bg_hex
-        self.text_hex = text_hex
-        self.radius_val = radius
-        self.font_size = dp(font_size_val)
-        self.background_normal = ''
-        self.background_down = ''
-        self.background_color = (0, 0, 0, 0)
-        self.color = hex_rgba(text_hex)
-        self.bold = True
-        self.bind(pos=self._redraw, size=self._redraw)
-        self._redraw()
+def _c(h, a=1.0):
+    r = get_color_from_hex(h)
+    return (r[0], r[1], r[2], a)
 
-    def _redraw(self, *_):
+
+# ─────────────────────────────────────────────────────────────
+#  CIRCLE BUTTON
+# ─────────────────────────────────────────────────────────────
+class CircBtn(Button):
+    def __init__(self, bg, fg, txt, fsz=24, **kw):
+        super().__init__(**kw)
+        self._bg = bg; self._fg = fg
+        self.text = txt
+        self.font_size = dp(fsz); self.bold = True
+        self.color = _c(fg)
+        self.background_normal = self.background_down = ''
+        self.background_color = (0,0,0,0)
+        self.bind(pos=self._d, size=self._d)
+
+    def _d(self, *_):
+        self.canvas.before.clear()
+        w, h = self.size; x, y = self.pos
+        d = min(w, h) * 0.92
+        ox = x + (w-d)/2; oy = y + (h-d)/2
+        with self.canvas.before:
+            Color(0, 0, 0, 0.22)
+            Ellipse(pos=(ox+dp(2), oy-dp(4)), size=(d,d))
+            Color(*_c(self._bg))
+            Ellipse(pos=(ox, oy), size=(d, d))
+
+    def recolor(self, bg, fg):
+        self._bg=bg; self._fg=fg; self.color=_c(fg); self._d()
+
+
+# ─────────────────────────────────────────────────────────────
+#  PILL BUTTON  (wide "0" key)
+# ─────────────────────────────────────────────────────────────
+class PillBtn(Button):
+    def __init__(self, bg, fg, txt, fsz=24, **kw):
+        super().__init__(**kw)
+        self._bg=bg; self._fg=fg
+        self.text=txt; self.font_size=dp(fsz); self.bold=True
+        self.color=_c(fg)
+        self.background_normal=self.background_down=''
+        self.background_color=(0,0,0,0)
+        self.halign='left'; self.valign='middle'
+        self.bind(pos=self._d, size=self._d)
+        self.bind(size=lambda *_: setattr(self,'text_size',(self.width,self.height)))
+        self.padding_x = dp(28)
+
+    def _d(self, *_):
+        self.canvas.before.clear()
+        h = self.height * 0.92
+        r = h/2
+        oy = self.y + (self.height - h)/2
+        with self.canvas.before:
+            Color(0,0,0,0.22)
+            RoundedRectangle(pos=(self.x+dp(2), oy-dp(4)),
+                             size=(self.width, h), radius=[dp(r)])
+            Color(*_c(self._bg))
+            RoundedRectangle(pos=(self.x, oy),
+                             size=(self.width, h), radius=[dp(r)])
+
+    def recolor(self, bg, fg):
+        self._bg=bg; self._fg=fg; self.color=_c(fg); self._d()
+
+
+# ─────────────────────────────────────────────────────────────
+#  DISPLAY
+# ─────────────────────────────────────────────────────────────
+class Display(BoxLayout):
+    def __init__(self, t, cb_toggle, **kw):
+        super().__init__(orientation='vertical', **kw)
+        self._t = t
+        self.padding = [dp(22), dp(10), dp(22), dp(0)]
+        self.spacing = dp(0)
+
+        # ── top: toggle pill ─────────────
+        top = BoxLayout(size_hint=(1, 0.20),
+                        orientation='horizontal',
+                        padding=[0, dp(6), 0, 0])
+        self._tog = Button(
+            text=t['toggle_icon'],
+            font_size=dp(18),
+            size_hint=(None, None), size=(dp(70), dp(28)),
+            background_normal='', background_color=(0,0,0,0),
+            color=(1,1,1,0.65),
+        )
+        self._tog.bind(pos=self._pill, size=self._pill)
+        self._tog.bind(on_press=cb_toggle)
+        top.add_widget(self._tog)
+        top.add_widget(Widget())
+        self.add_widget(top)
+
+        # ── expression (dim) ─────────────
+        self.expr = Label(
+            text='', font_size=dp(18),
+            halign='right', valign='bottom',
+            size_hint=(1, 0.20),
+            color=_c(t['text_expr']),
+        )
+        self.expr.bind(size=lambda *_: setattr(
+            self.expr, 'text_size', (self.expr.width, None)))
+        self.add_widget(self.expr)
+
+        # ── result (big) ──────────────────
+        self.result = Label(
+            text='0', font_size=dp(66),
+            halign='right', valign='bottom',
+            size_hint=(1, 0.60),
+            bold=True, color=_c(t['text_result']),
+        )
+        self.result.bind(size=lambda *_: setattr(
+            self.result, 'text_size', (self.result.width, None)))
+        self.add_widget(self.result)
+
+        self.bind(pos=self._bg, size=self._bg)
+        self._bg()
+
+    def _bg(self, *_):
         self.canvas.before.clear()
         with self.canvas.before:
-            # Shadow
-            Color(0, 0, 0, 0.18)
-            RoundedRectangle(
-                pos=(self.x + dp(2), self.y - dp(3)),
-                size=(self.width, self.height),
-                radius=[dp(self.radius_val)]
-            )
-            # Button face
-            Color(*hex_rgba(self.bg_hex))
-            RoundedRectangle(
-                pos=self.pos,
-                size=self.size,
-                radius=[dp(self.radius_val)]
-            )
-
-    def update_theme(self, bg_hex, text_hex='#FFFFFF'):
-        self.bg_hex = bg_hex
-        self.text_hex = text_hex
-        self.color = hex_rgba(text_hex)
-        self._redraw()
-
-
-class DisplayPanel(BoxLayout):
-    def __init__(self, theme, **kwargs):
-        super().__init__(orientation='vertical', **kwargs)
-        self.theme = theme
-        self.padding = [dp(24), dp(16), dp(24), dp(16)]
-        self.spacing = dp(4)
-
-        self.expr_label = Label(
-            text='',
-            font_size=dp(17),
-            halign='right',
-            valign='middle',
-            size_hint=(1, 0.35),
-            color=hex_rgba(theme['text_expr'])
-        )
-        self.expr_label.bind(size=lambda *_: setattr(
-            self.expr_label, 'text_size', (self.expr_label.width, None)))
-
-        self.result_label = Label(
-            text='0',
-            font_size=dp(52),
-            halign='right',
-            valign='middle',
-            size_hint=(1, 0.65),
-            bold=True,
-            color=hex_rgba(theme['text_main'])
-        )
-        self.result_label.bind(size=lambda *_: setattr(
-            self.result_label, 'text_size', (self.result_label.width, None)))
-
-        self.add_widget(self.expr_label)
-        self.add_widget(self.result_label)
-
-        self.bind(pos=self._redraw, size=self._redraw)
-        self._redraw()
-
-    def _redraw(self, *_):
-        self.canvas.before.clear()
-        with self.canvas.before:
-            Color(*hex_rgba(self.theme['display_bg']))
-            RoundedRectangle(pos=self.pos, size=self.size, radius=[dp(20)])
-
-    def update_theme(self, theme):
-        self.theme = theme
-        self.expr_label.color = hex_rgba(theme['text_expr'])
-        self.result_label.color = hex_rgba(theme['text_main'])
-        self._redraw()
-
-
-class SmartCalculatorUI(BoxLayout):
-    dark_mode = BooleanProperty(True)
-
-    def __init__(self, **kwargs):
-        super().__init__(orientation='vertical', **kwargs)
-        self.padding = dp(16)
-        self.spacing = dp(10)
-        self.expression = ''
-        self.just_result = False
-        self._oop_calc = Calculator()
-        self.theme = DARK
-
-        self._build_ui()
-        self._apply_theme()
-
-    def _build_ui(self):
-        # ── Top bar: paradigm spinner + theme toggle ──────────
-        top_bar = BoxLayout(
-            orientation='horizontal',
-            size_hint=(1, 0.07),
-            spacing=dp(10)
-        )
-
-        self.paradigm_spinner = Spinner(
-            text='Procedural',
-            values=['Procedural', 'OOP', 'Functional', 'Event-Driven', 'Extended'],
-            size_hint=(0.72, 1),
-            font_size=dp(14),
-            background_normal='',
-            background_color=hex_rgba(self.theme['spinner_bg']),
-            color=hex_rgba(self.theme['spinner_text']),
-        )
-
-        self.theme_btn = RoundButton(
-            text='☀',
-            bg_hex=self.theme['toggle_bg'],
-            text_hex=self.theme['text_fn'],
-            font_size_val=18,
-            size_hint=(0.28, 1),
-        )
-        self.theme_btn.bind(on_press=self._toggle_theme)
-
-        top_bar.add_widget(self.paradigm_spinner)
-        top_bar.add_widget(self.theme_btn)
-        self.add_widget(top_bar)
-
-        # ── Display panel ─────────────────────────────────────
-        self.display = DisplayPanel(self.theme, size_hint=(1, 0.22))
-        self.add_widget(self.display)
-
-        # ── Buttons ───────────────────────────────────────────
-        btn_area = BoxLayout(orientation='vertical',
-                             size_hint=(1, 0.71),
-                             spacing=dp(10))
-
-        # Row: AC, +/-, %, /
-        row1 = self._make_row([
-            ('AC',  'fn'),
-            ('+/-', 'fn'),
-            ('√',   'fn'),
-            ('/',   'op'),
-        ])
-        # Row: 7, 8, 9, ×
-        row2 = self._make_row([
-            ('7', 'num'), ('8', 'num'), ('9', 'num'), ('×', 'op'),
-        ])
-        # Row: 4, 5, 6, −
-        row3 = self._make_row([
-            ('4', 'num'), ('5', 'num'), ('6', 'num'), ('−', 'op'),
-        ])
-        # Row: 1, 2, 3, +
-        row4 = self._make_row([
-            ('1', 'num'), ('2', 'num'), ('3', 'num'), ('+', 'op'),
-        ])
-        # Row: ^, 0, ., =
-        row5 = self._make_row([
-            ('^', 'fn'), ('0', 'num'), ('.', 'num'), ('=', 'eq'),
-        ])
-
-        for row in [row1, row2, row3, row4, row5]:
-            btn_area.add_widget(row)
-
-        self.add_widget(btn_area)
-
-        # Store all button widgets for theme updates
-        self._all_rows = [row1, row2, row3, row4, row5]
-
-    def _make_row(self, specs):
-        row = BoxLayout(orientation='horizontal', spacing=dp(10))
-        for label, kind in specs:
-            btn = self._create_btn(label, kind)
-            row.add_widget(btn)
-        return row
-
-    def _create_btn(self, label, kind):
-        t = self.theme
-        if kind == 'num':
-            bg = t['btn_num'];   fg = t['text_main']
-        elif kind == 'op':
-            bg = t['btn_op'];    fg = t['text_op']
-        elif kind == 'fn':
-            bg = t['btn_fn'];    fg = t['text_fn']
-        elif kind == 'eq':
-            bg = t['btn_eq'];    fg = t['text_op']
-        else:
-            bg = t['btn_num'];   fg = t['text_main']
-
-        btn = RoundButton(
-            text=label,
-            bg_hex=bg,
-            text_hex=fg,
-            font_size_val=22,
-            size_hint=(1, 1),
-        )
-        btn.bind(on_press=lambda b: self._on_button(b.text))
-        return btn
-
-    # ── Theme ─────────────────────────────────────────────────
-    def _toggle_theme(self, *_):
-        self.dark_mode = not self.dark_mode
-        self.theme = DARK if self.dark_mode else LIGHT
-        self.theme_btn.text = '☀' if self.dark_mode else '🌙'
-        self._apply_theme()
-
-    def _apply_theme(self):
-        t = self.theme
-        # Root bg
-        self.canvas.before.clear()
-        with self.canvas.before:
-            Color(*hex_rgba(t['bg']))
+            Color(*_c(self._t['bg']))
             Rectangle(pos=self.pos, size=self.size)
-        self.bind(pos=self._redraw_bg, size=self._redraw_bg)
 
-        # Display
-        self.display.update_theme(t)
+    def _pill(self, *_):
+        b = self._tog
+        b.canvas.before.clear()
+        with b.canvas.before:
+            Color(1,1,1,0.09)
+            RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(14)])
 
-        # Spinner
-        self.paradigm_spinner.background_color = hex_rgba(t['spinner_bg'])
-        self.paradigm_spinner.color = hex_rgba(t['spinner_text'])
+    def apply(self, t):
+        self._t = t
+        self.expr.color   = _c(t['text_expr'])
+        self.result.color = _c(t['text_result'])
+        self._tog.text    = t['toggle_icon']
+        self._bg(); self._pill()
 
-        # Buttons - re-color by kind
-        kind_map = {
-            'AC': 'fn', '+/-': 'fn', '√': 'fn', '^': 'fn',
-            '/': 'op', '×': 'op', '−': 'op', '+': 'op',
-            '=': 'eq',
+
+# ─────────────────────────────────────────────────────────────
+#  ROOT
+# ─────────────────────────────────────────────────────────────
+class CalcRoot(BoxLayout):
+    dark = BooleanProperty(True)
+
+    ROWS = [
+        [('AC','fn'),('+/-','fn'),('←','fn'),('/','op')],
+        [('7','num'),('8','num'),('9','num'),('×','op')],
+        [('4','num'),('5','num'),('6','num'),('−','op')],
+        [('1','num'),('2','num'),('3','num'),('+','op')],
+        [('0','wide'),           ('.','num'),('=','eq')],
+    ]
+
+    def __init__(self, **kw):
+        super().__init__(orientation='vertical', **kw)
+        self._t   = DARK
+        self._e   = ''
+        self._jr  = False
+        self._all = []
+        self._build()
+
+    def _build(self):
+        self._disp = Display(self._t, self._toggle, size_hint=(1, 0.30))
+        self.add_widget(self._disp)
+
+        p = dp(14)
+        g = BoxLayout(orientation='vertical', size_hint=(1, 0.70),
+                      padding=[p, dp(2), p, dp(20)], spacing=dp(12))
+
+        for row_spec in self.ROWS:
+            row = BoxLayout(orientation='horizontal', spacing=dp(12))
+            for lbl, kind in row_spec:
+                w = self._btn(lbl, kind)
+                if kind == 'wide':
+                    w.size_hint_x = 2.2
+                row.add_widget(w)
+                self._all.append((w, 'num' if kind=='wide' else kind))
+            g.add_widget(row)
+
+        self.add_widget(g)
+        self.bind(pos=self._bg, size=self._bg)
+        self._bg()
+
+    def _btn(self, lbl, kind):
+        t = self._t
+        lu = {
+            'num': (t['btn_num'], t['text_num']),
+            'wide':(t['btn_num'], t['text_num']),
+            'fn':  (t['btn_fn'],  t['text_fn']),
+            'op':  (t['btn_op'],  t['text_op']),
+            'eq':  (t['btn_eq'],  t['text_op']),
         }
-        for row in self._all_rows:
-            for btn in row.children:
-                if isinstance(btn, RoundButton):
-                    lbl = btn.text
-                    kind = kind_map.get(lbl, 'num')
-                    if kind == 'num':
-                        btn.update_theme(t['btn_num'], t['text_main'])
-                    elif kind == 'op':
-                        btn.update_theme(t['btn_op'], t['text_op'])
-                    elif kind == 'fn':
-                        btn.update_theme(t['btn_fn'], t['text_fn'])
-                    elif kind == 'eq':
-                        btn.update_theme(t['btn_eq'], t['text_op'])
+        bg, fg = lu.get(kind, lu['num'])
+        fsz = 20 if len(lbl)>1 else 24
+        if kind == 'wide':
+            w = PillBtn(bg, fg, lbl, fsz=fsz, size_hint=(1,1))
+        else:
+            w = CircBtn(bg, fg, lbl, fsz=fsz, size_hint=(1,1))
+        w.bind(on_press=lambda b: self._key(b.text))
+        return w
 
-        self.theme_btn.update_theme(t['toggle_bg'], t['text_fn'])
-
-    def _redraw_bg(self, *_):
+    def _bg(self, *_):
         self.canvas.before.clear()
         with self.canvas.before:
-            Color(*hex_rgba(self.theme['bg']))
+            Color(*_c(self._t['bg']))
             Rectangle(pos=self.pos, size=self.size)
 
-    # ── Button logic ──────────────────────────────────────────
-    def _on_button(self, key):
+    def _toggle(self, *_):
+        self.dark = not self.dark
+        self._t   = DARK if self.dark else LIGHT
+        self._bg()
+        self._disp.apply(self._t)
+        t  = self._t
+        lu = {'num':(t['btn_num'],t['text_num']),
+              'fn': (t['btn_fn'], t['text_fn']),
+              'op': (t['btn_op'], t['text_op']),
+              'eq': (t['btn_eq'], t['text_op'])}
+        for w, kind in self._all:
+            bg, fg = lu.get(kind, lu['num'])
+            w.recolor(bg, fg)
+
+    def _key(self, key):
+        D = self._disp
         if key == 'AC':
-            self.expression = ''
-            self.just_result = False
-            self.display.result_label.text = '0'
-            self.display.expr_label.text = ''
-            return
-
+            self._e=''; self._jr=False
+            D.result.text='0'; D.expr.text=''; return
+        if key == '←':
+            e = self._e.rstrip()
+            e = e[:-1].rstrip() if (e and e[-1] in '+-*/%^') else e[:-1] if e else e
+            self._e=e; D.result.text=e.strip() or '0'; return
         if key == '=':
-            self._evaluate()
-            return
-
+            self._eval(); return
         if key == '+/-':
-            if self.expression:
-                if self.expression.startswith('-'):
-                    self.expression = self.expression[1:]
+            parts = self._e.strip().split()
+            if parts:
+                try:
+                    v=float(parts[-1]); v=-v
+                    parts[-1]=str(int(v) if v==int(v) else v)
+                    self._e=' '.join(parts); D.result.text=self._e
+                except ValueError: pass
+            return
+
+        sym = {'×':'*','−':'-'}.get(key, key)
+        is_op = sym in '+-*/%^'
+
+        if self._jr:
+            self._e = sym if is_op and not sym.isdigit() else ''
+            if is_op:
+                self._e = D.result.text + ' ' + sym + ' '
+            else:
+                self._e = sym
+            self._jr = False
+        else:
+            if is_op:
+                s=self._e.rstrip(); toks=s.split()
+                if toks and toks[-1] in '+-*/%^':
+                    toks[-1]=sym; self._e=' '.join(toks)+' '
                 else:
-                    self.expression = '-' + self.expression
-                self.display.result_label.text = self.expression
-            return
-
-        # Map display symbols to expression symbols
-        sym_map = {'×': '*', '−': '-'}
-        sym = sym_map.get(key, key)
-
-        if self.just_result:
-            # If last was a result and user taps a number, start fresh
-            if sym.isdigit() or sym == '.':
-                self.expression = sym
+                    self._e=s+' '+sym+' '
             else:
-                # Continue with result as operand
-                self.expression = self.display.result_label.text + ' ' + sym + ' '
-            self.just_result = False
-        else:
-            if sym in ('+', '-', '*', '/', '%', '^'):
-                self.expression = self.expression.rstrip() + ' ' + sym + ' '
-            else:
-                self.expression += sym
+                self._e += sym
 
-        self.display.result_label.text = self.expression.strip() or '0'
-        self.display.expr_label.text = ''
+        D.result.text = self._e.strip() or '0'
+        D.expr.text   = ''
 
-    def _evaluate(self):
-        expr = self.expression.strip()
-        if not expr:
-            return
-
-        paradigm = self.paradigm_spinner.text
-        self.display.expr_label.text = expr
-
+    def _eval(self):
+        expr = self._e.strip()
+        if not expr: return
+        self._disp.expr.text = expr
         try:
-            result = self._dispatch(paradigm, expr)
-            # Format nicely
-            if isinstance(result, float) and result == int(result):
-                display_result = str(int(result))
-            else:
-                display_result = f'{result:.6g}'
-
-            self.display.result_label.text = display_result
-            self.expression = display_result
-            self.just_result = True
-
-        except Exception as e:
-            self.display.result_label.text = 'Error'
-            self.display.expr_label.text = str(e)
-            self.expression = ''
-            self.just_result = False
-
-    def _dispatch(self, paradigm: str, expr: str) -> float:
-        # Handle special single-operand operations
-        parts = expr.split()
-        if len(parts) == 1:
-            try:
-                return float(parts[0])
-            except ValueError:
-                raise ValueError("Incomplete expression.")
-
-        # sqrt
-        if len(parts) == 2 and parts[0] == '√':
-            return square_root(float(parts[1]))
-
-        if paradigm == 'Procedural':
-            return procedural.calculate(expr)
-        elif paradigm == 'OOP':
-            return self._oop_calc.calculate(expr)
-        elif paradigm == 'Functional':
-            return functional.calculate(expr)
-        elif paradigm == 'Event-Driven':
-            return event_driven.calculate(expr)
-        elif paradigm == 'Extended':
-            from extras import additional_features
-            return additional_features.calculate(expr)
-        else:
-            return procedural.calculate(expr)
+            r = _run(expr)
+            out = str(int(r)) if r==int(r) else f'{r:.8g}'
+            self._disp.result.text = out
+            self._e = out; self._jr = True
+        except Exception as ex:
+            self._disp.result.text = 'Error'
+            self._disp.expr.text   = str(ex)
+            self._e=''; self._jr=False
 
 
-class SmartCalculatorApp(App):
+# ─────────────────────────────────────────────────────────────
+#  DISPATCHER
+# ─────────────────────────────────────────────────────────────
+def _run(expr: str) -> float:
+    p = expr.split()
+    if len(p)==1: return float(p[0])
+    if len(p)==2 and p[0]=='√': return square_root(float(p[1]))
+    return procedural.calculate(expr)
+
+
+class SmartCalcApp(App):
     def build(self):
         self.title = 'Smart Calculator'
-        return SmartCalculatorUI()
-
+        return CalcRoot()
 
 if __name__ == '__main__':
-    SmartCalculatorApp().run()
+    SmartCalcApp().run()
