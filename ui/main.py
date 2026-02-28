@@ -20,8 +20,13 @@ from kivy.clock import Clock
 
 import paradigms.procedural   as procedural
 from paradigms.oop_calculator   import Calculator
-from extras.additional_features import square_root, exponentiate, percentage
-
+from extras.additional_features import (
+    calculate as extra_calculate,
+    square_root,
+    percentage,
+    get_history,
+    clear_history,
+)
 Window.size = (400, 760)
 
 # ──────────────────────────────────────────────────────────────
@@ -245,6 +250,7 @@ class Display(BoxLayout):
 SCI_BTNS = [
     ['sin','cos','tan','log','ln'],
     ['x^y','sqrt','1/x','x!','%'],
+    ['HIS','HC'],
 ]
 
 class SciTray(BoxLayout):
@@ -682,6 +688,10 @@ class CalcPage(BoxLayout):
 
         if key == '=':
             self._eval(); return
+        
+        if key == 'HIS':
+            self._show_history(); return
+
 
         if key == '+/-':
             parts=self._e.strip().split()
@@ -728,10 +738,16 @@ class CalcPage(BoxLayout):
             elif fn=='ln':  res=math.log(val)
             elif fn=='x^y':
                 D.expr.text=f'{ex} ^'; self._e=ex+' ^ '; return
-            elif fn=='sqrt': res=math.sqrt(val)
+            elif fn=='sqrt': res=square_root(val)
             elif fn=='1/x':  res=1/val
             elif fn=='x!':   res=float(math.factorial(int(val)))
-            elif fn=='%':    res=val/100
+            elif fn=='%':    res=percentage(val, 1)
+            elif fn=='HIS':
+                self._show_history(); return
+            elif fn=='HC':
+                clear_history()
+                D.expr.text='History cleared'
+                return
             else: return
             out=str(int(res)) if res==int(res) else f'{res:.8g}'
             D.expr.text=f'{fn}({ex})'
@@ -739,6 +755,21 @@ class CalcPage(BoxLayout):
         except Exception as e:
             D.result.text='Error'; D.expr.text=str(e)
             self._e=''; self._jr=False
+    
+    def _show_history(self):
+        hist = get_history()
+        if not hist:
+            self._disp.expr.text = 'History is empty'
+            self._disp.result.text = '0'
+            return
+
+        last_items = hist[-3:]
+        compact = ' | '.join(f"{expr}={res:.8g}" for expr, res in last_items)
+        last_expr, last_res = hist[-1]
+        self._disp.expr.text = compact
+        self._disp.result.text = str(int(last_res)) if last_res == int(last_res) else f'{last_res:.8g}'
+        self._e = str(last_res)
+        self._jr = True
 
     def _eval(self):
         expr=self._e.strip()
@@ -900,11 +931,9 @@ class CalqRoot(FloatLayout):
 #  DISPATCHER
 # ──────────────────────────────────────────────────────────────
 def _run(expr: str) -> float:
-    p = expr.split()
-    if len(p)==1: return float(p[0])
-    if len(p)==3 and p[1]=='^':
-        return exponentiate(float(p[0]), float(p[2]))
-    return procedural.calculate(expr)
+    # Route through extras.additional_features so exponentiation, square root,
+    # percentage, retry normalization, and history tracking stay aligned.
+    return extra_calculate(expr)
 
 
 # ──────────────────────────────────────────────────────────────
