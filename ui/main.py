@@ -313,7 +313,7 @@ class Display(BoxLayout):
                         spacing=dp(6))
 
         self._name = Label(
-            text='CALQ', font_size=dp(12), bold=True,
+            text='CalCute', font_size=dp(12), bold=True,
             halign='left', valign='middle',
             color=_c(t['app_name']),
             size_hint=(None, 1), width=dp(55))
