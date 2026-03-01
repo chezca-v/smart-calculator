@@ -1069,9 +1069,9 @@ class CalqRoot(FloatLayout):
     def _go_mini(self, *_):
         if self._mini_mode: return
         self._mini_mode = True
-        Animation(opacity=0, duration=0.18).start(self._shell)
-        Clock.schedule_once(lambda *_: setattr(
-            self._shell, 'size_hint', (None, None)), 0.2)
+        # Just hide — do NOT touch size_hint or pos
+        self._shell.opacity = 0
+        self._shell.disabled = True
 
         self._mini = MiniBubble(self._t, self._restore)
         self._mini.set_text(self._calc.get_display_text())
@@ -1087,10 +1087,10 @@ class CalqRoot(FloatLayout):
         self._mini_mode = False
         if hasattr(self, '_sync'):
             self._sync.cancel()
-        self.remove_widget(self._mini); self._mini = None
-        self._shell.size_hint = (1, 1)
-        self._shell.opacity   = 0
-        Animation(opacity=1, duration=0.18).start(self._shell)
+        self.remove_widget(self._mini)
+        self._mini = None
+        self._shell.disabled = False
+        Animation(opacity=1, duration=0.2).start(self._shell)
 
 
 # ──────────────────────────────────────────────────────────────
