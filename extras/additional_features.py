@@ -1,5 +1,6 @@
 import math
 from typing import List, Tuple
+import ast, operator as _op
 
 # ── History tracker ──────────────────────────────────────────
 _history: List[Tuple[str, float]] = []
@@ -35,33 +36,29 @@ def percentage(value: float, percent: float) -> float:
     _record(f"{value} x {percent}%", result)
     return result
 
-def calculate(expression: str) -> float:
-    parts = expression.strip().split()
 
+# existing imports and history code remain unchanged above
+
+def calculate(expression: str) -> float:
+    """Evaluate an arithmetic expression with PEMDAS and extra features.
+
+    Supports caret (^) for exponent and normal operators.  The expression
+    is expected to have tokens separated by spaces coming from the UI,
+    but the AST parser handles normal precedence regardless of spacing.
+    """
+    # shortcut for sqrt notation
+    parts = expression.strip().split()
     if len(parts) == 2 and parts[0].lower() == 'sqrt':
         return square_root(float(parts[1]))
 
-    if len(parts) == 3:
-        try:
-            a  = float(parts[0])
-            op = parts[1]
-            b  = float(parts[2])
-        except ValueError:
-            raise ValueError("Invalid numbers in expression.")
+    # generic evaluation using AST
+    expr = expression.strip().replace('^', '**')
+    try:
+        tree = ast.parse(expr, mode='eval')
+        result = float(_eval_node(tree.body))
+    except Exception:
+        raise ValueError(f"Invalid expression: {expression}")
 
-        if op == '^':   return exponentiate(a, b)
-        if op == '%':   return percentage(a, b)
-        if op == '+':   result = a + b
-        elif op == '-': result = a - b
-        elif op == '*': result = a * b
-        elif op == '/':
-            if b == 0:  raise ValueError("Division by zero.")
-            result = a / b
-        else:
-            raise ValueError(f"Unsupported operator: {op}")
-
-        _record(expression, result)
-        return result
-
-    raise ValueError("Invalid expression format.")
+    _record(expression, result)
+    return result
 
