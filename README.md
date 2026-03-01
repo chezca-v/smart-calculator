@@ -87,7 +87,7 @@ The "Smart" in this calculator comes from its ability to process expressions usi
 ### 1. Install Dependencies
 Make sure you have Python installed, then install the Kivy framework:
 ```bash
-pip install kivy
+pip install -r requirements.txt
 ```
 
 ### 2. Run the App
