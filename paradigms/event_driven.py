@@ -44,7 +44,8 @@ def calculate(expression: str) -> float:
     expr = expression.strip().replace('^', '**')
     try:
         tree = ast.parse(expr, mode='eval')
-        result = float(_eval_node(tree.body))
+        # keep raw numeric result (int or float)
+        result = _eval_node(tree.body)
     except Exception:
         raise ValueError(f"Invalid expression: {expression}")
 

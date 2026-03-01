@@ -17,6 +17,7 @@ from kivy.utils import get_color_from_hex
 from kivy.animation import Animation
 from kivy.properties import BooleanProperty
 from kivy.clock import Clock
+from decimal import Decimal, Overflow, Context, setcontext
 
 import paradigms.procedural as procedural
 import paradigms.functional as functional
@@ -111,41 +112,100 @@ def _interpret(expr: str) -> float:
     # fallback
     return procedural.calculate(expr)
 
+custom_context = Context(prec=50, Emax=1000, Emin=-1000)
+setcontext(custom_context)
 
-def _format_result(r: float) -> str:
-    """Convert a numeric result to string for display.
-
-    - `∞` is shown for non-finite values (overflow from Python floats).
-    - Whole numbers are shown without a decimal point, *but* large integers
-      (more than 12 digits) are rendered in exponential form so the UI
-      remains readable.
-    - Floating values use up to eight significant digits and switch to
-      exponential format if the result would otherwise be very long.
-
-    This helper is shared by the calculator and converter pages so that
-    formatting behaviour is consistent everywhere.
-    """
+def exponentiate(base, exp):
+    try:
+        b = Decimal(str(base))
+        e = Decimal(str(exp))
+        result = b ** e
+        # Check if result exceeds our display threshold
+        if result.is_infinite():
+            return Decimal('Infinity')
+        try:
+            if int(result.log10()) > 1000:
+                return Decimal('Infinity')
+        except Exception:
+            pass
+        return result
+    except Overflow:
+        return Decimal('Infinity')
+    except Exception:
+        return "Error"
+    
+def _format_result(r) -> str:
     import math
-    # infinity / NaN handling
-    if not math.isfinite(r):
-        return '∞'
+    from decimal import Decimal, InvalidOperation
 
-    # integer case: decide whether to abbreviate
-    if r == int(r):
-        s_int = str(int(r))
+    MAX_EXP =  1000
+    MIN_EXP = -1000
+
+    def _inf_str(negative=False):
+        return '-∞' if negative else '∞'
+
+    def _sci(d: Decimal) -> str:
+        s = f'{d:e}'
+        m, exp_part = s.split('e')
+        m = m.rstrip('0').rstrip('.')
+        return f'{m}e{int(exp_part):+d}'
+
+    # integer branch: handle Python ints before float coercion
+    if isinstance(r, int):
+        s_int = str(r)
         if len(s_int) > 12:
-            # use scientific for huge integers
-            return f"{r:.8e}"
+            try:
+                d = Decimal(r)
+                return _sci(d)
+            except Exception:
+                return f"{r:.8e}"
         return s_int
 
-    # non-integer float
-    s = f"{r:.8g}"          # general format, 8 sig digits
-    if 'e' in s:
-        return s
-    if len(s) > 12:
-        return f"{r:.8e}"   # force exponent if still too long
-    return s
+    # Decimal branch
+    if isinstance(r, Decimal):
+        if not r.is_finite():
+            return _inf_str(r < 0)
+        try:
+            exp = int(r.log10()) if r != 0 else 0
+        except (InvalidOperation, Exception):
+            exp = 0
+        if exp > MAX_EXP:
+            return _inf_str(r < 0)
+        if r != 0 and exp < MIN_EXP:
+            return _inf_str(r < 0)
+        if abs(exp) >= 12:
+            return _sci(r)
+        return f'{r:g}'
 
+    # float / int branch
+    try:
+        f = float(r)
+    except (OverflowError, ValueError):
+        return _inf_str(str(r).startswith('-'))
+
+    if math.isnan(f):
+        return 'NaN'
+    if math.isinf(f):
+        return _inf_str(f < 0)
+
+    if f != 0:
+        try:
+            exp = int(math.floor(math.log10(abs(f))))
+        except Exception:
+            exp = 0
+        if exp > MAX_EXP:
+            return _inf_str(f < 0)
+        if exp < MIN_EXP:
+            return _inf_str(f < 0)
+
+    if f == int(f) and abs(f) < 1e15:
+        return str(int(f))
+    if abs(f) >= 1e12 or (f != 0 and abs(f) < 1e-9):
+        s = f'{f:.6e}'
+        m, ep = s.split('e')
+        m = m.rstrip('0').rstrip('.')
+        return f'{m}e{int(ep):+d}'
+    return f'{f:.8g}'
 
 def _c(h, a=1.0):
     r = get_color_from_hex(h)

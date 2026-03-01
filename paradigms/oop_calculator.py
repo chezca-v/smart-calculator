@@ -52,7 +52,7 @@ class Calculator:
         expr = expression.strip().replace('^', '**')
         try:
             tree = ast.parse(expr, mode='eval')
-            return float(self._eval_node(tree.body))
+            return self._eval_node(tree.body)
         except Exception:
             raise ValueError(f"Invalid expression: {expression}")
 
