@@ -53,9 +53,6 @@ DARK = {
     'tab_text_off': '#6A1B9A',   # darker purple
     'divider':      '#3D1F4A',
     'tray_handle':  '#4A2D55',
-    'mini_bg':      '#231428',
-    'mini_text':    '#FCE4EC',
-    'mini_btn':     '#E91E8C',
     'conv_input':   '#2C1A34',
     'conv_text':    '#F5E6F0',
     'hist_bg':      '#1F1226',
@@ -86,9 +83,6 @@ LIGHT = {
     'tab_text_off': '#CE93D8',
     'divider':      '#F8BBD9',
     'tray_handle':  '#F48FB1',
-    'mini_bg':      '#231428',
-    'mini_text':    '#FCE4EC',
-    'mini_btn':     '#E91E8C',
     'conv_input':   '#FFFFFF',
     'conv_text':    '#3E0036',
     'hist_bg':      '#FFF0F5',
@@ -181,13 +175,13 @@ class Pill(Button):
 #  DISPLAY AREA
 # ──────────────────────────────────────────────────────────────
 class Display(BoxLayout):
-    def __init__(self, t, toggle_cb, minimize_cb, **kw):
+    def __init__(self, t, toggle_cb, **kw):
         super().__init__(orientation='vertical', **kw)
         self._t = t
         self.padding = [dp(22), dp(14), dp(22), dp(8)]
         self.spacing = dp(0)
 
-        # ── top row: CALQ name | MINI btn | THEME btn ─────────
+        # ── top row: CALQ name | THEME btn ─────────
         top = BoxLayout(size_hint=(1, 0.22), orientation='horizontal',
                         spacing=dp(6))
 
@@ -198,15 +192,6 @@ class Display(BoxLayout):
             size_hint=(None, 1), width=dp(55))
         self._name.bind(size=lambda *_: setattr(
             self._name, 'text_size', (self._name.width, None)))
-
-        self._mini_btn = Button(
-            text='MIN', font_size=dp(9), bold=True,
-            size_hint=(None, None), size=(dp(42), dp(24)),
-            background_normal='', background_color=(0, 0, 0, 0),
-            color=_c(t['toggle_text']),
-        )
-        self._mini_btn.bind(pos=self._mini_draw, size=self._mini_draw)
-        self._mini_btn.bind(on_press=minimize_cb)
 
         self._tog = Button(
             text='LIGHT', font_size=dp(9), bold=True,
@@ -219,7 +204,6 @@ class Display(BoxLayout):
 
         top.add_widget(self._name)
         top.add_widget(Widget())
-        top.add_widget(self._mini_btn)
         top.add_widget(self._tog)
         self.add_widget(top)
 
@@ -251,12 +235,6 @@ class Display(BoxLayout):
             Color(*_c(self._t['toggle_bg']))
             RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(12)])
 
-    def _mini_draw(self, *_):
-        b = self._mini_btn; b.canvas.before.clear()
-        with b.canvas.before:
-            Color(*_c(self._t['toggle_bg']))
-            RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(12)])
-
     def _bg(self, *_):
         self.canvas.before.clear()
         with self.canvas.before:
@@ -274,8 +252,7 @@ class Display(BoxLayout):
         self.result.color = _c(t['result_text'])
         self._tog.text    = 'DARK' if t is LIGHT else 'LIGHT'
         self._tog.color   = _c(t['toggle_text'])
-        self._mini_btn.color = _c(t['toggle_text'])
-        self._bg(); self._tog_draw(); self._mini_draw()
+        self._bg(); self._tog_draw()
 
 
 # ──────────────────────────────────────────────────────────────
@@ -674,87 +651,6 @@ class ConverterView(BoxLayout):
 
 
 # ──────────────────────────────────────────────────────────────
-#  MINI FLOATING BUBBLE
-# ──────────────────────────────────────────────────────────────
-MINI_W = dp(178)
-MINI_H = dp(72)
-
-class MiniBubble(BoxLayout):
-    def __init__(self, t, on_restore, **kw):
-        super().__init__(orientation='horizontal', **kw)
-        self._t = t
-        self._ox = self._oy = 0
-        self.size_hint = (None, None)
-        self.size = (MINI_W, MINI_H)
-        self.pos  = (Window.width - MINI_W - dp(12),
-                     Window.height // 2 - MINI_H // 2)
-        self.padding = [dp(10), dp(8), dp(6), dp(8)]
-        self.spacing = dp(4)
-
-        self._lbl = Label(
-            text='0', font_size=dp(20), bold=True,
-            halign='left', valign='middle',
-            color=_c(t['mini_text']), size_hint=(1, 1))
-        self._lbl.bind(size=lambda *_: setattr(
-            self._lbl, 'text_size', (self._lbl.width, None)))
-        self.add_widget(self._lbl)
-
-        rb = Button(
-            text='OPEN', font_size=dp(9), bold=True,
-            size_hint=(None, None), size=(dp(40), dp(26)),
-            background_normal='', background_color=(0,0,0,0),
-            color=_c(t['mini_btn']))
-        rb.bind(pos=self._rb_draw, size=self._rb_draw)
-        rb.bind(on_press=lambda *_: on_restore())
-        self._rb = rb
-        self.add_widget(rb)
-
-        self.bind(pos=self._bg, size=self._bg)
-        self._bg()
-
-    def _bg(self, *_):
-        self.canvas.before.clear()
-        with self.canvas.before:
-            Color(0, 0, 0, 0.50)
-            RoundedRectangle(pos=(self.x+dp(3), self.y-dp(4)),
-                             size=self.size, radius=[dp(22)])
-            Color(*_c(self._t['mini_bg']))
-            RoundedRectangle(pos=self.pos, size=self.size, radius=[dp(22)])
-            Color(*_c(self._t['mini_btn'], 0.55))
-            Line(rounded_rectangle=(self.x+1, self.y+1,
-                                    self.width-2, self.height-2,
-                                    dp(22)), width=1)
-
-    def _rb_draw(self, *_):
-        b = self._rb; b.canvas.before.clear()
-        with b.canvas.before:
-            Color(*_c(self._t['mini_btn'], 0.25))
-            RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(8)])
-
-    def set_text(self, txt):
-        self._lbl.text = txt
-
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
-            self._ox = touch.x - self.x
-            self._oy = touch.y - self.y
-            touch.grab(self); return True
-        return super().on_touch_down(touch)
-
-    def on_touch_move(self, touch):
-        if touch.grab_current is self:
-            nx = max(0, min(touch.x - self._ox, Window.width  - self.width))
-            ny = max(0, min(touch.y - self._oy, Window.height - self.height))
-            self.pos = (nx, ny); return True
-        return super().on_touch_move(touch)
-
-    def on_touch_up(self, touch):
-        if touch.grab_current is self:
-            touch.ungrab(self); return True
-        return super().on_touch_up(touch)
-
-
-# ──────────────────────────────────────────────────────────────
 #  CALCULATOR PAGE
 # ──────────────────────────────────────────────────────────────
 MAIN_ROWS = [
@@ -766,7 +662,7 @@ MAIN_ROWS = [
 ]
 
 class CalcPage(BoxLayout):
-    def __init__(self, t, toggle_cb, minimize_cb, **kw):
+    def __init__(self, t, toggle_cb, **kw):
         super().__init__(orientation='vertical', **kw)
         self._t        = t
         self._e        = ''
@@ -775,7 +671,7 @@ class CalcPage(BoxLayout):
         self._hist_open= False
         self._tiles    = []
 
-        self._disp = Display(t, toggle_cb, minimize_cb, size_hint=(1, 0.27))
+        self._disp = Display(t, toggle_cb, size_hint=(1, 0.27))
         self.add_widget(self._disp)
 
         # sci tray
@@ -1042,8 +938,6 @@ class CalqRoot(FloatLayout):
     def __init__(self, **kw):
         super().__init__(**kw)
         self._t         = DARK
-        self._mini_mode = False
-        self._mini      = None
         self._build()
 
     def _build(self):
@@ -1054,8 +948,7 @@ class CalqRoot(FloatLayout):
         self._shell.add_widget(self._tabs)
 
         self._pages = BoxLayout(orientation='horizontal', size_hint=(1, 1))
-        self._calc  = CalcPage(self._t, self._toggle, self._go_mini,
-                               size_hint=(1, 1))
+        self._calc  = CalcPage(self._t, self._toggle, size_hint=(1, 1))
         self._conv  = ConverterView(self._t, size_hint=(1, 1))
         self._pages.add_widget(self._calc)
         self._shell.add_widget(self._pages)
@@ -1077,52 +970,7 @@ class CalqRoot(FloatLayout):
         self._tabs.apply(self._t)
         self._calc.apply_theme(self._t)
         self._conv.apply(self._t)
-        if self._mini:
-            self._mini._t = self._t; self._mini._bg()
 
-    def _go_mini(self, *_):
-        if self._mini_mode:
-            return
-
-        self._mini_mode = True
-
-        # Remove main shell
-        if self._shell in self.children:
-            self.remove_widget(self._shell)
-
-        # Create mini bubble
-        self._mini = MiniBubble(self._t, self._restore)
-        self._mini.set_text(self._calc.get_display_text())
-
-        # Add mini bubble on top
-        self.add_widget(self._mini)
-
-        # Start syncing
-        self._sync = Clock.schedule_interval(self._sync_mini, 0.25)
-
-
-    def _sync_mini(self, *_):
-        if self._mini:
-            self._mini.set_text(self._calc.get_display_text())
-
-
-    def _restore(self, *_):
-        if not self._mini_mode:
-            return
-
-        self._mini_mode = False
-
-        # Stop syncing
-        if hasattr(self, "_sync"):
-            self._sync.cancel()
-
-        # Remove mini bubble
-        if self._mini and self._mini in self.children:
-            self.remove_widget(self._mini)
-            self._mini = None
-
-        # Add back main shell
-        self.add_widget(self._shell)
 
 # ──────────────────────────────────────────────────────────────
 #  DISPATCHER
