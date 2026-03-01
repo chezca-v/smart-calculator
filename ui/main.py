@@ -112,6 +112,41 @@ def _interpret(expr: str) -> float:
     return procedural.calculate(expr)
 
 
+def _format_result(r: float) -> str:
+    """Convert a numeric result to string for display.
+
+    - `∞` is shown for non-finite values (overflow from Python floats).
+    - Whole numbers are shown without a decimal point, *but* large integers
+      (more than 12 digits) are rendered in exponential form so the UI
+      remains readable.
+    - Floating values use up to eight significant digits and switch to
+      exponential format if the result would otherwise be very long.
+
+    This helper is shared by the calculator and converter pages so that
+    formatting behaviour is consistent everywhere.
+    """
+    import math
+    # infinity / NaN handling
+    if not math.isfinite(r):
+        return '∞'
+
+    # integer case: decide whether to abbreviate
+    if r == int(r):
+        s_int = str(int(r))
+        if len(s_int) > 12:
+            # use scientific for huge integers
+            return f"{r:.8e}"
+        return s_int
+
+    # non-integer float
+    s = f"{r:.8g}"          # general format, 8 sig digits
+    if 'e' in s:
+        return s
+    if len(s) > 12:
+        return f"{r:.8e}"   # force exponent if still too long
+    return s
+
+
 def _c(h, a=1.0):
     r = get_color_from_hex(h)
     return (r[0], r[1], r[2], a)
@@ -542,10 +577,16 @@ class ConverterView(BoxLayout):
         self.add_widget(in_lbl)
         self._in_lbl = in_lbl
 
+        # custom input filter permits digits, decimal point and
+        # scientific notation markers; avoids automatic conversion to
+        # infinity which occurs when using the built-in 'float' filter.
+        def sci_filter(text, from_undo):
+            return ''.join(ch for ch in text if ch.isdigit() or ch in '.eE+-')
+
         self._val = TextInput(
             hint_text='0', font_size=dp(26),
             size_hint=(1, None), height=dp(60),
-            input_filter='float', multiline=False,
+            input_filter=sci_filter, multiline=False,
             background_normal='',
             background_color=_c(t['conv_input']),
             foreground_color=_c(t['conv_text']),
@@ -653,11 +694,13 @@ class ConverterView(BoxLayout):
 
     def _do(self):
         try:
+            # convert input to float; if overflow occurs it becomes inf
             val = float(self._val.text or '0')
             res = _convert(val, self._from.text, self._to.text, self._cat)
-            r = int(res) if res == int(res) else round(res, 8)
+            out = _format_result(res)
+            # display original input as typed (could be huge) and formatted output
             self._res_lbl.text = (
-                f'{val} {self._from.text}\n= {r} {self._to.text}')
+                f'{self._val.text or val} {self._from.text}\n= {out} {self._to.text}')
         except Exception as e:
             self._res_lbl.text = f'Error: {e}'
 
@@ -885,7 +928,18 @@ class CalcPage(BoxLayout):
             elif fn=='√': res = math.sqrt(val)
             elif fn=='1/x':  res = 1 / val
             elif fn=='x!':   res = float(math.factorial(int(val)))
-            elif fn=='%':    res = val / 100
+            elif fn=='%':
+                # If there is an existing expression ending with a number or ')',
+                # treat '%' as an infix modulus operator; otherwise treat as
+                # percentage-of-value (val/100).
+                s = (self._e or '').rstrip()
+                last = s[-1] if s else None
+                if last and (last.isdigit() or last == ')'):
+                    # insert modulus operator with spacing so parser sees it
+                    self._e = (self._e or '') + ' % '
+                    D.result.text = self._e.strip() or '0'
+                    return
+                res = val / 100
             elif fn == '(' or fn == ')':
                 # insert parentheses into the expression
                 # be robust if self._e contains only whitespace
@@ -903,7 +957,7 @@ class CalcPage(BoxLayout):
                 return
             else: return
             label = f'{fn}({ex})'
-            out   = str(int(res)) if res == int(res) else f'{res:.8g}'
+            out   = _format_result(res)
             hist_record(label, res)
             D.expr.text = label; D.result.text = out
             self._e = out; self._jr = True
@@ -915,13 +969,14 @@ class CalcPage(BoxLayout):
         expr = self._e.strip()
         if not expr: return
         self._disp.expr.text = expr
-        # ─── ADD THIS DEBUG LOG ───
+        
+        # ─── DEBUG LOG ───
         print(f"[QA TEST] Spinner set to: {CURRENT_PARADIGM}")
         print(f"[QA TEST] Expression sent: {expr}")
-        
+
         try:
             r   = _interpret(expr)
-            out = str(int(r)) if r == int(r) else f'{r:.8g}'
+            out = _format_result(r)
             # prefix the history record with the paradigm for clarity
             hist_record(f"[{CURRENT_PARADIGM}] {expr}", r)
             self._disp.result.text = out
