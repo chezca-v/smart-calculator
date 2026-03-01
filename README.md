@@ -73,8 +73,6 @@ The "Smart" in this calculator comes from its ability to process expressions usi
 * **Reactive Flow:** Designed to feel responsive and handle data only when the "equals" signal is fired.
 * **File:** `paradigms/event_driven.py`
 
----
-
 ## 🌟 Key Features
 
 * ✨ **Extended Math:** Native support for `^` (exponent), `√` (square root), and `%` (percentage).
@@ -83,7 +81,6 @@ The "Smart" in this calculator comes from its ability to process expressions usi
 * 🛡️ **Smart Error Handling:** Captures syntax errors and division by zero gracefully without crashing.
 * 📜 **Calculation History:** Every successful result is logged and can be retrieved via the `additional_features` module.
 
----
 
 ## 🚀 Getting Started
 
