@@ -843,7 +843,7 @@ class CalcPage(BoxLayout):
             elif fn=='ln':   res = math.log(val)
             elif fn=='x^y':
                 D.expr.text = f'{ex} ^'; self._e = ex + ' ^ '; return
-            elif fn=='sqrt': res = math.sqrt(val)
+            elif fn=='√': res = math.sqrt(val)
             elif fn=='1/x':  res = 1 / val
             elif fn=='x!':   res = float(math.factorial(int(val)))
             elif fn=='%':    res = val / 100
