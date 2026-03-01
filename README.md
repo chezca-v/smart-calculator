@@ -26,7 +26,7 @@ SmartCalculator/
 
 ## 📸 Screenshots
 
-<table width="100%">
+<table width="100%" align ="center">
   <tr>
     <td align="center" valign="top">
       <strong>Dark Mode</strong><br><br>
