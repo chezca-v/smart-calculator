@@ -51,7 +51,7 @@ DARK = {
     'toggle_text':  '#CE93D8',   # lilac
     'tab_active':   '#E91E8C',
     'tab_text_on':  '#FFFFFF',
-    'tab_text_off': '#7A5E85',
+    'tab_text_off': '#6A1B9A',   # darker purple
     'divider':      '#3D1F4A',
     'tray_handle':  '#4A2D55',
     'mini_bg':      '#231428',
@@ -1082,31 +1082,48 @@ class CalqRoot(FloatLayout):
             self._mini._t = self._t; self._mini._bg()
 
     def _go_mini(self, *_):
-        if self._mini_mode: return
-        self._mini_mode = True
-        # Just hide — do NOT touch size_hint or pos
-        self._shell.opacity = 0
-        self._shell.disabled = True
+        if self._mini_mode:
+            return
 
+        self._mini_mode = True
+
+        # Remove main shell
+        if self._shell in self.children:
+            self.remove_widget(self._shell)
+
+        # Create mini bubble
         self._mini = MiniBubble(self._t, self._restore)
         self._mini.set_text(self._calc.get_display_text())
+
+        # Add mini bubble on top
         self.add_widget(self._mini)
+
+        # Start syncing
         self._sync = Clock.schedule_interval(self._sync_mini, 0.25)
+
 
     def _sync_mini(self, *_):
         if self._mini:
             self._mini.set_text(self._calc.get_display_text())
 
-    def _restore(self, *_):
-        if not self._mini_mode: return
-        self._mini_mode = False
-        if hasattr(self, '_sync'):
-            self._sync.cancel()
-        self.remove_widget(self._mini)
-        self._mini = None
-        self._shell.disabled = False
-        Animation(opacity=1, duration=0.2).start(self._shell)
 
+    def _restore(self, *_):
+        if not self._mini_mode:
+            return
+
+        self._mini_mode = False
+
+        # Stop syncing
+        if hasattr(self, "_sync"):
+            self._sync.cancel()
+
+        # Remove mini bubble
+        if self._mini and self._mini in self.children:
+            self.remove_widget(self._mini)
+            self._mini = None
+
+        # Add back main shell
+        self.add_widget(self._shell)
 
 # ──────────────────────────────────────────────────────────────
 #  DISPATCHER
