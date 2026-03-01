@@ -283,7 +283,7 @@ class Display(BoxLayout):
 # ──────────────────────────────────────────────────────────────
 SCI_ROWS = [
     ['sin', 'cos', 'tan', 'log', 'ln'],
-    ['x^y', 'sqrt', '1/x', 'x!', '%'],
+    ['x^y', '√', '1/x', 'x!', '%'],
 ]
 
 class SciTray(BoxLayout):
@@ -339,7 +339,7 @@ class SciTray(BoxLayout):
 
 
 # ──────────────────────────────────────────────────────────────
-#  HISTORY PANEL  (inside sci tray area, toggled separately)
+#  HISTORY PANEL 
 # ──────────────────────────────────────────────────────────────
 class HistoryPanel(BoxLayout):
     def __init__(self, t, on_close, **kw):
@@ -456,7 +456,7 @@ class HistoryPanel(BoxLayout):
 
 
 # ──────────────────────────────────────────────────────────────
-#  CONVERTER TAB  — clean redesign
+#  CONVERTER TAB  
 # ──────────────────────────────────────────────────────────────
 CONV_CATS = {
     'Length':  {'m':1,'km':1000,'cm':0.01,'mm':0.001,
