@@ -152,7 +152,7 @@ class Pill(Button):
         self.background_normal = self.background_down = ''
         self.background_color = (0, 0, 0, 0)
         self.halign = 'left'; self.valign = 'middle'
-        self.padding_x = dp(26)
+        self.padding = [dp(26), 0, dp(8), 0]
         self.bind(pos=self._d, size=self._d)
         self.bind(size=lambda *_: setattr(
             self, 'text_size', (self.width, self.height)))
@@ -521,7 +521,7 @@ class ConverterView(BoxLayout):
         self._in_lbl = in_lbl
 
         self._val = TextInput(
-            hint_text='0', font_size=dp(26), bold=True,
+            hint_text='0', font_size=dp(26),
             size_hint=(1, None), height=dp(60),
             input_filter='float', multiline=False,
             background_normal='',
