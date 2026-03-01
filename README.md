@@ -1,4 +1,5 @@
 # Smart Calculator — Multi-Paradigm Kivy App
+![Calculator](https://png.pngtree.com/png-vector/20231116/ourmid/pngtree-watercolor-cute-calculator-png-image_10449965.png)
 
 ## Project Structure
 
@@ -54,3 +55,4 @@ OOP additionally usable as:
 calc = Calculator()
 calc.calculate("10 + 5")  # -> 15.0
 ```
+
