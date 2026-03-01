@@ -577,7 +577,7 @@ class ConverterView(BoxLayout):
         to_col.add_widget(lbl_to)
         to_col.add_widget(self._to)
 
-        arr = Label(text='>>', font_size=dp(16), bold=True,
+        arr = Label(text='→', font_size=dp(16), bold=True,
                     color=_c(t['btn_op']),
                     size_hint=(None,1), width=dp(28))
         unit_row.add_widget(from_col)
