@@ -1,8 +1,3 @@
-# =========================
-# FILE: ui/main.py  —  CALQ  v3  |  Sakura + Dusk
-# Themes: Rose-Petal Light  /  Cosmic Berry Dark
-# =========================
-
 import sys, os, math
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
