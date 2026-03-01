@@ -694,18 +694,20 @@ class MiniBubble(BoxLayout):
 
         self._lbl = Label(
             text='0', font_size=dp(20), bold=True,
-            halign='right', valign='middle',
+            halign='left', valign='middle',
             color=_c(t['mini_text']), size_hint=(1, 1))
         self._lbl.bind(size=lambda *_: setattr(
             self._lbl, 'text_size', (self._lbl.width, None)))
         self.add_widget(self._lbl)
 
         rb = Button(
-            text='[ ]', font_size=dp(10), bold=True,
-            size_hint=(None, None), size=(dp(30), dp(30)),
+            text='OPEN', font_size=dp(9), bold=True,
+            size_hint=(None, None), size=(dp(40), dp(26)),
             background_normal='', background_color=(0,0,0,0),
             color=_c(t['mini_btn']))
+        rb.bind(pos=self._rb_draw, size=self._rb_draw)
         rb.bind(on_press=lambda *_: on_restore())
+        self._rb = rb
         self.add_widget(rb)
 
         self.bind(pos=self._bg, size=self._bg)
@@ -723,6 +725,12 @@ class MiniBubble(BoxLayout):
             Line(rounded_rectangle=(self.x+1, self.y+1,
                                     self.width-2, self.height-2,
                                     dp(22)), width=1)
+
+    def _rb_draw(self, *_):
+        b = self._rb; b.canvas.before.clear()
+        with b.canvas.before:
+            Color(*_c(self._t['mini_btn'], 0.25))
+            RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(8)])
 
     def set_text(self, txt):
         self._lbl.text = txt
