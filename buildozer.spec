@@ -1,5 +1,5 @@
 [app]
-title = CALQ
+title = CalCute
 package.name = calq
 package.domain = org.yourname
 source.dir = .
