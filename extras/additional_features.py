@@ -61,4 +61,3 @@ def calculate(expression: str) -> float:
 
     _record(expression, result)
     return result
-
