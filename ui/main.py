@@ -21,8 +21,7 @@ from kivy.clock import Clock
 import paradigms.procedural as procedural
 from paradigms.oop_calculator import Calculator
 from extras.additional_features import (
-    square_root, exponentiate, percentage,
-    get_history, clear_history, record as hist_record
+    exponentiate, get_history, clear_history, record as hist_record
 )
 
 Window.size = (400, 760)
@@ -83,7 +82,7 @@ LIGHT = {
     'toggle_bg':    '#FCE4EC',
     'toggle_text':  '#C2185B',
     'tab_active':   '#E91E8C',
-    'tab_text_on':  '#FFFFFF',
+    'tab_text_on':  '#E91E8C',
     'tab_text_off': '#CE93D8',
     'divider':      '#F8BBD9',
     'tray_handle':  '#F48FB1',
@@ -284,7 +283,7 @@ class Display(BoxLayout):
 # ──────────────────────────────────────────────────────────────
 SCI_ROWS = [
     ['sin', 'cos', 'tan', 'log', 'ln'],
-    ['x^y', 'sqrt', '1/x', 'x!', '%'],
+    ['x^y', '√', '1/x', 'x!', '%'],
 ]
 
 class SciTray(BoxLayout):
@@ -340,7 +339,7 @@ class SciTray(BoxLayout):
 
 
 # ──────────────────────────────────────────────────────────────
-#  HISTORY PANEL  (inside sci tray area, toggled separately)
+#  HISTORY PANEL 
 # ──────────────────────────────────────────────────────────────
 class HistoryPanel(BoxLayout):
     def __init__(self, t, on_close, **kw):
@@ -457,7 +456,7 @@ class HistoryPanel(BoxLayout):
 
 
 # ──────────────────────────────────────────────────────────────
-#  CONVERTER TAB  — clean redesign
+#  CONVERTER TAB  
 # ──────────────────────────────────────────────────────────────
 CONV_CATS = {
     'Length':  {'m':1,'km':1000,'cm':0.01,'mm':0.001,
