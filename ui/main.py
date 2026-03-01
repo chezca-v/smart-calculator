@@ -18,6 +18,7 @@ from kivy.animation import Animation
 from kivy.properties import BooleanProperty
 from kivy.clock import Clock
 
+<<<<<<< HEAD
 import paradigms.procedural as procedural
 from paradigms.oop_calculator import Calculator
 from extras.additional_features import (
@@ -25,6 +26,17 @@ from extras.additional_features import (
     get_history, clear_history, record as hist_record
 )
 
+=======
+import paradigms.procedural   as procedural
+from paradigms.oop_calculator   import Calculator
+from extras.additional_features import (
+    calculate as extra_calculate,
+    square_root,
+    percentage,
+    get_history,
+    clear_history,
+)
+>>>>>>> 5fd7a605d396508b86a215bae1507859e5b57096
 Window.size = (400, 760)
 
 # ──────────────────────────────────────────────────────────────
@@ -275,9 +287,16 @@ class Display(BoxLayout):
 # ──────────────────────────────────────────────────────────────
 #  SCIENTIFIC TRAY
 # ──────────────────────────────────────────────────────────────
+<<<<<<< HEAD
 SCI_ROWS = [
     ['sin', 'cos', 'tan', 'log', 'ln'],
     ['x^y', 'sqrt', '1/x', 'x!', '%'],
+=======
+SCI_BTNS = [
+    ['sin','cos','tan','log','ln'],
+    ['x^y','sqrt','1/x','x!','%'],
+    ['HIS','HC'],
+>>>>>>> 5fd7a605d396508b86a215bae1507859e5b57096
 ]
 
 class SciTray(BoxLayout):
@@ -888,6 +907,10 @@ class CalcPage(BoxLayout):
 
         if key == '=':
             self._eval(); return
+        
+        if key == 'HIS':
+            self._show_history(); return
+
 
         if key == '+/-':
             parts = self._e.strip().split()
@@ -932,11 +955,25 @@ class CalcPage(BoxLayout):
             elif fn=='log':  res = math.log10(val)
             elif fn=='ln':   res = math.log(val)
             elif fn=='x^y':
+<<<<<<< HEAD
                 D.expr.text = f'{ex} ^'; self._e = ex + ' ^ '; return
             elif fn=='sqrt': res = math.sqrt(val)
             elif fn=='1/x':  res = 1 / val
             elif fn=='x!':   res = float(math.factorial(int(val)))
             elif fn=='%':    res = val / 100
+=======
+                D.expr.text=f'{ex} ^'; self._e=ex+' ^ '; return
+            elif fn=='sqrt': res=square_root(val)
+            elif fn=='1/x':  res=1/val
+            elif fn=='x!':   res=float(math.factorial(int(val)))
+            elif fn=='%':    res=percentage(val, 1)
+            elif fn=='HIS':
+                self._show_history(); return
+            elif fn=='HC':
+                clear_history()
+                D.expr.text='History cleared'
+                return
+>>>>>>> 5fd7a605d396508b86a215bae1507859e5b57096
             else: return
             label = f'{fn}({ex})'
             out   = str(int(res)) if res == int(res) else f'{res:.8g}'
@@ -944,8 +981,28 @@ class CalcPage(BoxLayout):
             D.expr.text = label; D.result.text = out
             self._e = out; self._jr = True
         except Exception as e:
+<<<<<<< HEAD
             D.result.text = 'Error'; D.expr.text = str(e)
             self._e = ''; self._jr = False
+=======
+            D.result.text='Error'; D.expr.text=str(e)
+            self._e=''; self._jr=False
+    
+    def _show_history(self):
+        hist = get_history()
+        if not hist:
+            self._disp.expr.text = 'History is empty'
+            self._disp.result.text = '0'
+            return
+
+        last_items = hist[-3:]
+        compact = ' | '.join(f"{expr}={res:.8g}" for expr, res in last_items)
+        last_expr, last_res = hist[-1]
+        self._disp.expr.text = compact
+        self._disp.result.text = str(int(last_res)) if last_res == int(last_res) else f'{last_res:.8g}'
+        self._e = str(last_res)
+        self._jr = True
+>>>>>>> 5fd7a605d396508b86a215bae1507859e5b57096
 
     def _eval(self):
         expr = self._e.strip()
@@ -1089,11 +1146,17 @@ class CalqRoot(FloatLayout):
 #  DISPATCHER
 # ──────────────────────────────────────────────────────────────
 def _run(expr: str) -> float:
+<<<<<<< HEAD
     p = expr.split()
     if len(p) == 1: return float(p[0])
     if len(p) == 3 and p[1] == '^':
         return exponentiate(float(p[0]), float(p[2]))
     return procedural.calculate(expr)
+=======
+    # Route through extras.additional_features so exponentiation, square root,
+    # percentage, retry normalization, and history tracking stay aligned.
+    return extra_calculate(expr)
+>>>>>>> 5fd7a605d396508b86a215bae1507859e5b57096
 
 
 # ──────────────────────────────────────────────────────────────

@@ -1,0 +1,3 @@
+# Kivy currently has limited support on newest Python releases on Windows.
+# Use Python 3.11 or 3.12 for the smoothest install experience.
+kivy==2.3.1; python_version < "3.14"
