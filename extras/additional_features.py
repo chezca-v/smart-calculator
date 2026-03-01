@@ -64,3 +64,4 @@ def calculate(expression: str) -> float:
         return result
 
     raise ValueError("Invalid expression format.")
+
