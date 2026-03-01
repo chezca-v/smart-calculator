@@ -201,11 +201,12 @@ class Display(BoxLayout):
             self._name, 'text_size', (self._name.width, None)))
 
         self._mini_btn = Button(
-            text='_', font_size=dp(14), bold=True,
-            size_hint=(None, None), size=(dp(32), dp(24)),
+            text='MIN', font_size=dp(9), bold=True,
+            size_hint=(None, None), size=(dp(42), dp(24)),
             background_normal='', background_color=(0, 0, 0, 0),
-            color=_c(t['fn_text']),
+            color=_c(t['toggle_text']),
         )
+        self._mini_btn.bind(pos=self._mini_draw, size=self._mini_draw)
         self._mini_btn.bind(on_press=minimize_cb)
 
         self._tog = Button(
@@ -251,6 +252,12 @@ class Display(BoxLayout):
             Color(*_c(self._t['toggle_bg']))
             RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(12)])
 
+    def _mini_draw(self, *_):
+        b = self._mini_btn; b.canvas.before.clear()
+        with b.canvas.before:
+            Color(*_c(self._t['toggle_bg']))
+            RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(12)])
+
     def _bg(self, *_):
         self.canvas.before.clear()
         with self.canvas.before:
@@ -268,8 +275,8 @@ class Display(BoxLayout):
         self.result.color = _c(t['result_text'])
         self._tog.text    = 'DARK' if t is LIGHT else 'LIGHT'
         self._tog.color   = _c(t['toggle_text'])
-        self._mini_btn.color = _c(t['fn_text'])
-        self._bg(); self._tog_draw()
+        self._mini_btn.color = _c(t['toggle_text'])
+        self._bg(); self._tog_draw(); self._mini_draw()
 
 
 # ──────────────────────────────────────────────────────────────
@@ -528,7 +535,7 @@ class ConverterView(BoxLayout):
             background_color=_c(t['conv_input']),
             foreground_color=_c(t['conv_text']),
             cursor_color=_c(t['btn_op']),
-            padding=[dp(16), dp(14)],
+            padding=[dp(14), dp(14)],
         )
         self.add_widget(self._val)
 
@@ -984,6 +991,7 @@ class TabBar(BoxLayout):
                 size_hint=(1, 1),
                 background_normal='', background_color=(0,0,0,0))
             b.bind(on_press=lambda btn, l=label: self._tap(l))
+            b.bind(pos=self._bg, size=self._bg)
             self._btns[label] = b
             self.add_widget(b)
 
@@ -1008,9 +1016,9 @@ class TabBar(BoxLayout):
             for lbl, b in self._btns.items():
                 if lbl == self._active:
                     Color(*_c(self._t['tab_active']))
-                    Line(points=[b.x+dp(10), self.y+dp(2),
-                                 b.right-dp(10), self.y+dp(2)],
-                         width=dp(2))
+                    Line(points=[b.x+dp(4), self.y+dp(3),
+                                 b.right-dp(4), self.y+dp(3)],
+                         width=dp(2.5))
 
     def apply(self, t):
         self._t = t; self._update(); self._bg()
