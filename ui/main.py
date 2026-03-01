@@ -19,6 +19,8 @@ from kivy.properties import BooleanProperty
 from kivy.clock import Clock
 
 import paradigms.procedural as procedural
+import paradigms.functional as functional
+import paradigms.event_driven as event_driven
 from paradigms.oop_calculator import Calculator
 from extras.additional_features import (
     exponentiate, get_history, clear_history, record as hist_record
@@ -28,8 +30,6 @@ Window.size = (400, 760)
 
 # ──────────────────────────────────────────────────────────────
 #  PALETTES
-#  DARK  = Cosmic Berry  — deep plum + neon rose accent
-#  LIGHT = Sakura Petal  — soft ivory + warm rose accent
 # ──────────────────────────────────────────────────────────────
 DARK = {
     'bg':           '#1A0F1E',   # deep aubergine void
@@ -94,6 +94,23 @@ LIGHT = {
 
 _OOP = Calculator()
 
+# paradigm selection state; UI spinner will toggle this
+PARADIGM_NAMES = ['Procedural', 'OOP', 'Functional', 'Event']
+CURRENT_PARADIGM = 'Procedural'
+
+# simple dispatcher mapping
+def _interpret(expr: str) -> float:
+    if CURRENT_PARADIGM == 'Procedural':
+        return procedural.calculate(expr)
+    if CURRENT_PARADIGM == 'OOP':
+        return _OOP.calculate(expr)
+    if CURRENT_PARADIGM == 'Functional':
+        return functional.calculate(expr)
+    if CURRENT_PARADIGM == 'Event':
+        return event_driven.calculate(expr)
+    # fallback
+    return procedural.calculate(expr)
+
 
 def _c(h, a=1.0):
     r = get_color_from_hex(h)
@@ -137,9 +154,9 @@ class Tile(Button):
 
 class Pill(Button):
     """Wide pill-shaped 0 key."""
-    def __init__(self, bg, fg, txt='0', fsz=22, **kw):
+    def __init__(self, bg, fg, txt='0', fsz=22, r=16, **kw):
         super().__init__(**kw)
-        self._bg = bg; self._fg = fg
+        self._bg = bg; self._fg = fg; self._r = r
         self.text = txt; self.font_size = dp(fsz); self.bold = True
         self.color = _c(fg)
         self.background_normal = self.background_down = ''
@@ -181,7 +198,7 @@ class Display(BoxLayout):
         self.padding = [dp(22), dp(14), dp(22), dp(8)]
         self.spacing = dp(0)
 
-        # ── top row: CALQ name | THEME btn ─────────
+        # ── top row: CALQ name | PARADIGM spinner | THEME btn ─────────
         top = BoxLayout(size_hint=(1, 0.22), orientation='horizontal',
                         spacing=dp(6))
 
@@ -193,6 +210,16 @@ class Display(BoxLayout):
         self._name.bind(size=lambda *_: setattr(
             self._name, 'text_size', (self._name.width, None)))
 
+        # paradigm label (updated when spinner changes)
+
+        # paradigm selector spinner
+        self._par_spin = Spinner(
+            text=CURRENT_PARADIGM, values=PARADIGM_NAMES,
+            font_size=dp(9), size_hint=(None, None), size=(dp(88), dp(24)),
+            background_normal='', background_color=_c(t['toggle_bg']),
+            color=_c(t['toggle_text'])
+        )
+
         self._tog = Button(
             text='LIGHT', font_size=dp(9), bold=True,
             size_hint=(None, None), size=(dp(52), dp(24)),
@@ -203,6 +230,7 @@ class Display(BoxLayout):
         self._tog.bind(on_press=toggle_cb)
 
         top.add_widget(self._name)
+        top.add_widget(self._par_spin)
         top.add_widget(Widget())
         top.add_widget(self._tog)
         self.add_widget(top)
@@ -235,6 +263,11 @@ class Display(BoxLayout):
             Color(*_c(self._t['toggle_bg']))
             RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(12)])
 
+    def _on_paradigm_change(self, spinner, text):
+        """Spinner callback; update the global paradigm selection."""
+        global CURRENT_PARADIGM
+        CURRENT_PARADIGM = text
+
     def _bg(self, *_):
         self.canvas.before.clear()
         with self.canvas.before:
@@ -252,6 +285,9 @@ class Display(BoxLayout):
         self.result.color = _c(t['result_text'])
         self._tog.text    = 'DARK' if t is LIGHT else 'LIGHT'
         self._tog.color   = _c(t['toggle_text'])
+        # update spinner colors as well
+        self._par_spin.background_color = _c(t['toggle_bg'])
+        self._par_spin.color = _c(t['toggle_text'])
         self._bg(); self._tog_draw()
 
 
@@ -261,6 +297,7 @@ class Display(BoxLayout):
 SCI_ROWS = [
     ['sin', 'cos', 'tan', 'log', 'ln'],
     ['x^y', '√', '1/x', 'x!', '%'],
+    ['(', ')'],
 ]
 
 class SciTray(BoxLayout):
@@ -847,6 +884,18 @@ class CalcPage(BoxLayout):
             elif fn=='1/x':  res = 1 / val
             elif fn=='x!':   res = float(math.factorial(int(val)))
             elif fn=='%':    res = val / 100
+            elif fn == '(' or fn == ')':
+                # insert parentheses into the expression
+                # if '(' follows a number or ')', insert implicit multiplication
+                if fn == '(':
+                    if self._e and (self._e.strip()[-1].isdigit() or self._e.strip()[-1] == ')'):
+                        self._e += '*('
+                    else:
+                        self._e += '('
+                else:
+                    self._e += ')'
+                D.result.text = self._e.strip() or '0'
+                return
             else: return
             label = f'{fn}({ex})'
             out   = str(int(res)) if res == int(res) else f'{res:.8g}'
@@ -862,9 +911,10 @@ class CalcPage(BoxLayout):
         if not expr: return
         self._disp.expr.text = expr
         try:
-            r   = _run(expr)
+            r   = _interpret(expr)
             out = str(int(r)) if r == int(r) else f'{r:.8g}'
-            hist_record(expr, r)
+            # prefix the history record with the paradigm for clarity
+            hist_record(f"[{CURRENT_PARADIGM}] {expr}", r)
             self._disp.result.text = out
             self._e = out; self._jr = True
         except Exception as ex:
@@ -973,14 +1023,14 @@ class CalqRoot(FloatLayout):
 
 
 # ──────────────────────────────────────────────────────────────
-#  DISPATCHER
+#  DISPATCHER (delegates based on spinner choice)
 # ──────────────────────────────────────────────────────────────
+# The UI no longer uses _run directly; the CalcPage._eval method
+# calls _interpret (defined earlier) which respects the current
+# paradigm selection.  We keep _run around for legacy references.
+
 def _run(expr: str) -> float:
-    p = expr.split()
-    if len(p) == 1: return float(p[0])
-    if len(p) == 3 and p[1] == '^':
-        return exponentiate(float(p[0]), float(p[2]))
-    return procedural.calculate(expr)
+    return _interpret(expr)
 
 
 # ──────────────────────────────────────────────────────────────
