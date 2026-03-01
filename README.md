@@ -114,11 +114,11 @@ buildozer android debug
 Developed with passion by:
 
 * 🎀 Franchezca Banayad (@chezca-v)
-✨ Princess Mae Sanchez (@cessamaeeee)
-👨‍💻 Jose Jerico Escaño (@Jose-Jerico)
-🌟 Ysa Frigillana (@ysaf-dev)
-👩‍💻 Elena Lanuza (@lenadevug)
-⚡ Karl Esteban (@krljsph09)
+* ✨ Princess Mae Sanchez (@cessamaeeee)
+* 👨‍💻 Jose Jerico Escaño (@Jose-Jerico)
+* 🌟 Ysa Frigillana (@ysaf-dev)
+* 👩‍💻 Elena Lanuza (@lenadevug)
+* ⚡ Karl Esteban (@krljsph09)
 
 ### Contributors
 Thanks to all the amazing contributors who have helped make this project better!
