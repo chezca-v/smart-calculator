@@ -51,7 +51,7 @@ SmartCalculator/
 
 ## 🛠️ Programming Paradigms
 
-The "Smart" in this calculator comes from its ability to process expressions using four distinct architectural approaches. You can toggle these using the **Spinner (Dropdown)** in the UI.
+The "Smart" in this calculator comes from its ability to process expressions using four distinct architectural approaches.
 
 ### 🏗️ Object-Oriented (OOP)
 * **Encapsulation:** Logic is bundled within a `Calculator` class.
