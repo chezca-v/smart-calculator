@@ -1015,6 +1015,8 @@ class TabBar(BoxLayout):
             on = (lbl == self._active)
             b.color = _c(self._t['tab_text_on' if on else 'tab_text_off'])
             b.bold  = on
+        # Redraw background to move the active underline immediately
+        self._bg()
 
     def _bg(self, *_):
         self.canvas.before.clear()
@@ -1061,9 +1063,14 @@ class CalqRoot(FloatLayout):
         self.add_widget(self._shell)
 
     def _on_tab(self, label):
+        # Ensure the tab bar reflects the active page when switching
+        try:
+            self._tabs._active = label
+            self._tabs._update()
+        except Exception:
+            pass
         self._pages.clear_widgets()
-        self._pages.add_widget(
-            self._calc if label == 'Calculator' else self._conv)
+        self._pages.add_widget(self._calc if label == 'Calculator' else self._conv)
 
     def _toggle(self, *_):
         self.dark = not self.dark
