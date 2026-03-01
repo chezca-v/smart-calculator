@@ -219,6 +219,8 @@ class Display(BoxLayout):
             background_normal='', background_color=_c(t['toggle_bg']),
             color=_c(t['toggle_text'])
         )
+        # wire spinner to handler so selection updates the current paradigm
+        self._par_spin.bind(text=self._on_paradigm_change)
 
         self._tog = Button(
             text='LIGHT', font_size=dp(9), bold=True,
@@ -886,14 +888,17 @@ class CalcPage(BoxLayout):
             elif fn=='%':    res = val / 100
             elif fn == '(' or fn == ')':
                 # insert parentheses into the expression
-                # if '(' follows a number or ')', insert implicit multiplication
+                # be robust if self._e contains only whitespace
+                s = (self._e or '').rstrip()
+                last = s[-1] if s else None
                 if fn == '(':
-                    if self._e and (self._e.strip()[-1].isdigit() or self._e.strip()[-1] == ')'):
-                        self._e += '*('
+                    # implicit multiplication if previous token is a number or a closing paren
+                    if last and (last.isdigit() or last == ')'):
+                        self._e = (self._e or '') + '*('
                     else:
-                        self._e += '('
+                        self._e = (self._e or '') + '('
                 else:
-                    self._e += ')'
+                    self._e = (self._e or '') + ')'
                 D.result.text = self._e.strip() or '0'
                 return
             else: return
@@ -910,6 +915,10 @@ class CalcPage(BoxLayout):
         expr = self._e.strip()
         if not expr: return
         self._disp.expr.text = expr
+        # ─── ADD THIS DEBUG LOG ───
+        print(f"[QA TEST] Spinner set to: {CURRENT_PARADIGM}")
+        print(f"[QA TEST] Expression sent: {expr}")
+        
         try:
             r   = _interpret(expr)
             out = str(int(r)) if r == int(r) else f'{r:.8g}'
