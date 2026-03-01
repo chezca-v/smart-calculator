@@ -33,25 +33,25 @@ Window.size = (400, 760)
 #  PALETTES
 # ──────────────────────────────────────────────────────────────
 DARK = {
-    'bg':           '#1A0F1E',   # deep aubergine void
-    'display_bg':   '#231428',   # lifted plum surface
-    'btn_num':      '#2C1A34',   # dark grape tile
-    'btn_fn':       '#231428',   # recessed fn tile
-    'btn_sci':      '#271630',   # sci tray tile
-    'btn_op':       '#C2185B',   # hot rose-magenta
-    'btn_eq':       '#E91E8C',   # brighter neon pink
-    'num_text':     '#F5E6F0',   # warm blush white
-    'fn_text':      '#7A5E85',   # muted lavender
-    'sci_text':     '#B39DCC',   # soft purple
+    'bg':           '#1A0F1E',
+    'display_bg':   '#231428',
+    'btn_num':      '#2C1A34',
+    'btn_fn':       '#231428',
+    'btn_sci':      '#271630',
+    'btn_op':       '#C2185B',
+    'btn_eq':       '#E91E8C',
+    'num_text':     '#F5E6F0',
+    'fn_text':      '#7A5E85',
+    'sci_text':     '#B39DCC',
     'op_text':      '#FFFFFF',
-    'result_text':  '#FCE4EC',   # very pale rose
-    'expr_text':    '#4A2D55',   # dim violet
+    'result_text':  '#FCE4EC',
+    'expr_text':    '#4A2D55',
     'app_name':     '#7A5E85',
     'toggle_bg':    '#3D1F4A',
-    'toggle_text':  '#CE93D8',   # lilac
+    'toggle_text':  '#CE93D8',
     'tab_active':   '#E91E8C',
     'tab_text_on':  '#FFFFFF',
-    'tab_text_off': '#6A1B9A',   # darker purple
+    'tab_text_off': '#6A1B9A',
     'divider':      '#3D1F4A',
     'tray_handle':  '#4A2D55',
     'conv_input':   '#2C1A34',
@@ -63,20 +63,20 @@ DARK = {
     'hist_accent':  '#E91E8C',
 }
 LIGHT = {
-    'bg':           '#FFF0F5',   # rose-tinted ivory
+    'bg':           '#FFF0F5',
     'display_bg':   '#FFFFFF',
     'btn_num':      '#FFFFFF',
-    'btn_fn':       '#FCE4EC',   # pale blush
-    'btn_sci':      '#F8BBD9',   # deeper blush
-    'btn_op':       '#E91E8C',   # hot pink
-    'btn_eq':       '#C2185B',   # deep rose
-    'num_text':     '#3E0036',   # deep plum
-    'fn_text':      '#AD1457',   # rose
-    'sci_text':     '#6A1B9A',   # purple
+    'btn_fn':       '#FCE4EC',
+    'btn_sci':      '#F8BBD9',
+    'btn_op':       '#E91E8C',
+    'btn_eq':       '#C2185B',
+    'num_text':     '#3E0036',
+    'fn_text':      '#AD1457',
+    'sci_text':     '#6A1B9A',
     'op_text':      '#FFFFFF',
     'result_text':  '#1A0028',
-    'expr_text':    '#CE93D8',   # light purple
-    'app_name':     '#F48FB1',   # pink
+    'expr_text':    '#CE93D8',
+    'app_name':     '#F48FB1',
     'toggle_bg':    '#FCE4EC',
     'toggle_text':  '#C2185B',
     'tab_active':   '#E91E8C',
@@ -99,7 +99,27 @@ _OOP = Calculator()
 PARADIGM_NAMES = ['Procedural', 'OOP', 'Functional', 'Event']
 CURRENT_PARADIGM = 'Procedural'
 
-# simple dispatcher mapping
+# Descriptions shown in the info card when each paradigm is selected
+PARADIGM_INFO = {
+    'Procedural': (
+        'Procedural',
+        'Step-by-step functions\nif op == "+": return a + b'
+    ),
+    'OOP': (
+        'Object-Oriented',
+        'Calculator class instance\nself.result = self.num1 + self.num2'
+    ),
+    'Functional': (
+        'Functional',
+        'Pure functions via operator module\noperator.add(num1, num2)'
+    ),
+    'Event': (
+        'Event-Driven',
+        'Emit / listen event bus\nemit("calc") -> listener returns result'
+    ),
+}
+
+# simple dispatcher — routes expression to the selected paradigm engine
 def _interpret(expr: str) -> float:
     if CURRENT_PARADIGM == 'Procedural':
         return procedural.calculate(expr)
@@ -109,7 +129,6 @@ def _interpret(expr: str) -> float:
         return functional.calculate(expr)
     if CURRENT_PARADIGM == 'Event':
         return event_driven.calculate(expr)
-    # fallback
     return procedural.calculate(expr)
 
 custom_context = Context(prec=50, Emax=1000, Emin=-1000)
@@ -120,7 +139,6 @@ def exponentiate(base, exp):
         b = Decimal(str(base))
         e = Decimal(str(exp))
         result = b ** e
-        # Check if result exceeds our display threshold
         if result.is_infinite():
             return Decimal('Infinity')
         try:
@@ -133,7 +151,7 @@ def exponentiate(base, exp):
         return Decimal('Infinity')
     except Exception:
         return "Error"
-    
+
 def _format_result(r) -> str:
     import math
     from decimal import Decimal, InvalidOperation
@@ -142,7 +160,7 @@ def _format_result(r) -> str:
     MIN_EXP = -1000
 
     def _inf_str(negative=False):
-        return '-∞' if negative else '∞'
+        return '-inf' if negative else 'inf'
 
     def _sci(d: Decimal) -> str:
         s = f'{d:e}'
@@ -150,7 +168,6 @@ def _format_result(r) -> str:
         m = m.rstrip('0').rstrip('.')
         return f'{m}e{int(exp_part):+d}'
 
-    # integer branch: handle Python ints before float coercion
     if isinstance(r, int):
         s_int = str(r)
         if len(s_int) > 12:
@@ -161,7 +178,6 @@ def _format_result(r) -> str:
                 return f"{r:.8e}"
         return s_int
 
-    # Decimal branch
     if isinstance(r, Decimal):
         if not r.is_finite():
             return _inf_str(r < 0)
@@ -177,7 +193,6 @@ def _format_result(r) -> str:
             return _sci(r)
         return f'{r:g}'
 
-    # float / int branch
     try:
         f = float(r)
     except (OverflowError, ValueError):
@@ -213,7 +228,7 @@ def _c(h, a=1.0):
 
 
 # ──────────────────────────────────────────────────────────────
-#  TILE BUTTON  — rounded square with shadow + highlight rim
+#  TILE BUTTON
 # ──────────────────────────────────────────────────────────────
 class Tile(Button):
     def __init__(self, bg, fg, txt, fsz=22, r=16, **kw):
@@ -293,8 +308,8 @@ class Display(BoxLayout):
         self.padding = [dp(22), dp(14), dp(22), dp(8)]
         self.spacing = dp(0)
 
-        # ── top row: CALQ name | PARADIGM spinner | THEME btn ─────────
-        top = BoxLayout(size_hint=(1, 0.22), orientation='horizontal',
+        # ── top row: CALQ | paradigm spinner | theme toggle ───
+        top = BoxLayout(size_hint=(1, 0.18), orientation='horizontal',
                         spacing=dp(6))
 
         self._name = Label(
@@ -305,16 +320,14 @@ class Display(BoxLayout):
         self._name.bind(size=lambda *_: setattr(
             self._name, 'text_size', (self._name.width, None)))
 
-        # paradigm label (updated when spinner changes)
-
-        # paradigm selector spinner
+        # Spinner — selecting a paradigm updates CURRENT_PARADIGM
+        # and immediately shows its description in the info card below
         self._par_spin = Spinner(
             text=CURRENT_PARADIGM, values=PARADIGM_NAMES,
             font_size=dp(9), size_hint=(None, None), size=(dp(88), dp(24)),
             background_normal='', background_color=_c(t['toggle_bg']),
-            color=_c(t['toggle_text'])
+            color=_c(t['toggle_text']),
         )
-        # wire spinner to handler so selection updates the current paradigm
         self._par_spin.bind(text=self._on_paradigm_change)
 
         self._tog = Button(
@@ -332,20 +345,45 @@ class Display(BoxLayout):
         top.add_widget(self._tog)
         self.add_widget(top)
 
+        # ── paradigm info card ────────────────────────────────
+        # Shows the paradigm name (bold pink) and a one-liner code
+        # snippet so the user can see HOW the calculation was done.
+        # Updates instantly whenever the spinner changes.
+        card = BoxLayout(orientation='vertical',
+                         size_hint=(1, 0.20), spacing=dp(1))
+        self._para_title = Label(
+            text='', font_size=dp(10), bold=True,
+            halign='left', valign='bottom',
+            color=_c(t['hist_accent']),
+            size_hint=(1, 0.45))
+        self._para_title.bind(size=lambda *_: setattr(
+            self._para_title, 'text_size', (self._para_title.width, None)))
+        self._para_desc = Label(
+            text='', font_size=dp(9),
+            halign='left', valign='top',
+            color=_c(t['toggle_text']),
+            size_hint=(1, 0.55))
+        self._para_desc.bind(size=lambda *_: setattr(
+            self._para_desc, 'text_size', (self._para_desc.width, None)))
+        card.add_widget(self._para_title)
+        card.add_widget(self._para_desc)
+        self.add_widget(card)
+        self._card = card
+
         # ── expression label ──────────────────────────────────
         self.expr = Label(
-            text='', font_size=dp(14),
+            text='', font_size=dp(13),
             halign='right', valign='bottom',
-            size_hint=(1, 0.18), color=_c(t['expr_text']))
+            size_hint=(1, 0.14), color=_c(t['expr_text']))
         self.expr.bind(size=lambda *_: setattr(
             self.expr, 'text_size', (self.expr.width, None)))
         self.add_widget(self.expr)
 
         # ── big result ────────────────────────────────────────
         self.result = Label(
-            text='0', font_size=dp(60),
+            text='0', font_size=dp(54),
             halign='right', valign='bottom',
-            size_hint=(1, 0.60), bold=True,
+            size_hint=(1, 0.48), bold=True,
             color=_c(t['result_text']))
         self.result.bind(size=lambda *_: setattr(
             self.result, 'text_size', (self.result.width, None)))
@@ -354,6 +392,9 @@ class Display(BoxLayout):
         self.bind(pos=self._bg, size=self._bg)
         self._bg()
 
+        # populate the info card with the default paradigm on startup
+        self._on_paradigm_change(None, CURRENT_PARADIGM)
+
     def _tog_draw(self, *_):
         b = self._tog; b.canvas.before.clear()
         with b.canvas.before:
@@ -361,9 +402,13 @@ class Display(BoxLayout):
             RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(12)])
 
     def _on_paradigm_change(self, spinner, text):
-        """Spinner callback; update the global paradigm selection."""
+        """Called when the paradigm spinner value changes.
+        Updates the global CURRENT_PARADIGM and refreshes the info card."""
         global CURRENT_PARADIGM
         CURRENT_PARADIGM = text
+        title, desc = PARADIGM_INFO.get(text, (text, ''))
+        self._para_title.text = title
+        self._para_desc.text  = desc
 
     def _bg(self, *_):
         self.canvas.before.clear()
@@ -377,14 +422,15 @@ class Display(BoxLayout):
 
     def apply(self, t):
         self._t = t
-        self._name.color  = _c(t['app_name'])
-        self.expr.color   = _c(t['expr_text'])
-        self.result.color = _c(t['result_text'])
-        self._tog.text    = 'DARK' if t is LIGHT else 'LIGHT'
-        self._tog.color   = _c(t['toggle_text'])
-        # update spinner colors as well
+        self._name.color       = _c(t['app_name'])
+        self.expr.color        = _c(t['expr_text'])
+        self.result.color      = _c(t['result_text'])
+        self._tog.text         = 'DARK' if t is LIGHT else 'LIGHT'
+        self._tog.color        = _c(t['toggle_text'])
+        self._para_title.color = _c(t['hist_accent'])
+        self._para_desc.color  = _c(t['toggle_text'])
         self._par_spin.background_color = _c(t['toggle_bg'])
-        self._par_spin.color = _c(t['toggle_text'])
+        self._par_spin.color   = _c(t['toggle_text'])
         self._bg(); self._tog_draw()
 
 
@@ -393,7 +439,7 @@ class Display(BoxLayout):
 # ──────────────────────────────────────────────────────────────
 SCI_ROWS = [
     ['sin', 'cos', 'tan', 'log', 'ln'],
-    ['x^y', '√', '1/x', 'x!', '%'],
+    ['x^y', 'sqrt', '1/x', 'x!', '%'],
     ['(', ')'],
 ]
 
@@ -404,7 +450,6 @@ class SciTray(BoxLayout):
         self.padding = [dp(12), dp(4), dp(12), dp(4)]
         self.spacing = dp(7)
 
-        # drag handle
         hr = BoxLayout(size_hint=(1, None), height=dp(16))
         hr.add_widget(Widget())
         h = Widget(size_hint=(None, None), size=(dp(36), dp(4)))
@@ -450,7 +495,7 @@ class SciTray(BoxLayout):
 
 
 # ──────────────────────────────────────────────────────────────
-#  HISTORY PANEL 
+#  HISTORY PANEL
 # ──────────────────────────────────────────────────────────────
 class HistoryPanel(BoxLayout):
     def __init__(self, t, on_close, **kw):
@@ -459,13 +504,11 @@ class HistoryPanel(BoxLayout):
         self.padding = [dp(14), dp(8), dp(14), dp(8)]
         self.spacing = dp(6)
 
-        # header
         hdr = BoxLayout(size_hint=(1, None), height=dp(34),
                         orientation='horizontal')
         title = Label(text='History', font_size=dp(13), bold=True,
                       halign='left', valign='middle',
-                      color=_c(t['hist_accent']),
-                      size_hint=(1, 1))
+                      color=_c(t['hist_accent']), size_hint=(1, 1))
         title.bind(size=lambda *_: setattr(
             title, 'text_size', (title.width, None)))
 
@@ -473,36 +516,29 @@ class HistoryPanel(BoxLayout):
             text='Clear', font_size=dp(11), bold=True,
             size_hint=(None, 1), width=dp(48),
             background_normal='', background_color=(0, 0, 0, 0),
-            color=_c(t['fn_text']),
-        )
+            color=_c(t['fn_text']))
         clr_btn.bind(on_press=lambda *_: self._clear())
 
         close_btn = Button(
             text='X', font_size=dp(11), bold=True,
             size_hint=(None, 1), width=dp(32),
             background_normal='', background_color=(0, 0, 0, 0),
-            color=_c(t['fn_text']),
-        )
+            color=_c(t['fn_text']))
         close_btn.bind(on_press=lambda *_: on_close())
+
         hdr.add_widget(title)
         hdr.add_widget(clr_btn)
         hdr.add_widget(close_btn)
         self.add_widget(hdr)
 
-        # scrollable list
         self._scroll = ScrollView(
-            size_hint=(1, 1),
-            do_scroll_x=False,
+            size_hint=(1, 1), do_scroll_x=False,
             bar_width=dp(4),
             bar_color=_c(t['hist_accent'], 0.7),
             bar_inactive_color=_c(t['hist_accent'], 0.25),
-            scroll_type=['bars', 'content'],
-        )
-        self._list = BoxLayout(
-            orientation='vertical',
-            size_hint=(1, None),
-            spacing=dp(5),
-        )
+            scroll_type=['bars', 'content'])
+        self._list = BoxLayout(orientation='vertical',
+                               size_hint=(1, None), spacing=dp(5))
         self._list.bind(minimum_height=self._list.setter('height'))
         self._scroll.add_widget(self._list)
         self.add_widget(self._scroll)
@@ -521,13 +557,16 @@ class HistoryPanel(BoxLayout):
             self._list.add_widget(lbl)
             return
         for expr, result in reversed(items):
-            r = int(result) if result == int(result) else round(result, 8)
+            try:
+                r = int(result) if result == int(result) else round(result, 8)
+            except Exception:
+                r = result
             item = BoxLayout(orientation='vertical',
                              size_hint=(1, None), height=dp(48),
                              padding=[dp(10), dp(6), dp(10), dp(6)])
             item.bind(pos=lambda w, _: self._item_bg(w),
                       size=lambda w, _: self._item_bg(w))
-            expr_lbl = Label(text=expr, font_size=dp(11),
+            expr_lbl = Label(text=str(expr), font_size=dp(11),
                              halign='left', valign='bottom',
                              color=_c(self._t['hist_sub']),
                              size_hint=(1, 0.45))
@@ -567,7 +606,7 @@ class HistoryPanel(BoxLayout):
 
 
 # ──────────────────────────────────────────────────────────────
-#  CONVERTER TAB  
+#  CONVERTER TAB
 # ──────────────────────────────────────────────────────────────
 CONV_CATS = {
     'Length':  {'m':1,'km':1000,'cm':0.01,'mm':0.001,
@@ -604,21 +643,16 @@ class ConverterView(BoxLayout):
         self.padding = [dp(16), dp(14), dp(16), dp(16)]
         self.spacing = dp(10)
 
-        # ── category chips (horizontal scroll) ───────────────
         scroll = ScrollView(size_hint=(1, None), height=dp(42),
-                            do_scroll_y=False,
-                            bar_width=0)
-        self._chip_row = BoxLayout(
-            orientation='horizontal',
-            size_hint=(None, 1), spacing=dp(7))
-        self._chip_row.bind(
-            minimum_width=self._chip_row.setter('width'))
+                            do_scroll_y=False, bar_width=0)
+        self._chip_row = BoxLayout(orientation='horizontal',
+                                   size_hint=(None, 1), spacing=dp(7))
+        self._chip_row.bind(minimum_width=self._chip_row.setter('width'))
         self._chip_btns = {}
         for cat in CONV_CATS:
-            b = Button(
-                text=cat, font_size=dp(12), bold=True,
-                size_hint=(None, 1), width=dp(72),
-                background_normal='', background_color=(0,0,0,0))
+            b = Button(text=cat, font_size=dp(12), bold=True,
+                       size_hint=(None, 1), width=dp(72),
+                       background_normal='', background_color=(0,0,0,0))
             b.bind(pos=lambda w,_,b=b: self._chip_draw(b),
                    size=lambda w,_,b=b: self._chip_draw(b))
             b.bind(on_press=lambda btn,c=cat: self._set_cat(c))
@@ -627,7 +661,6 @@ class ConverterView(BoxLayout):
         scroll.add_widget(self._chip_row)
         self.add_widget(scroll)
 
-        # ── value input ───────────────────────────────────────
         in_lbl = Label(text='Value to convert', font_size=dp(11),
                        halign='left', valign='middle',
                        color=_c(t['fn_text']),
@@ -637,9 +670,6 @@ class ConverterView(BoxLayout):
         self.add_widget(in_lbl)
         self._in_lbl = in_lbl
 
-        # custom input filter permits digits, decimal point and
-        # scientific notation markers; avoids automatic conversion to
-        # infinity which occurs when using the built-in 'float' filter.
         def sci_filter(text, from_undo):
             return ''.join(ch for ch in text if ch.isdigit() or ch in '.eE+-')
 
@@ -651,13 +681,10 @@ class ConverterView(BoxLayout):
             background_color=_c(t['conv_input']),
             foreground_color=_c(t['conv_text']),
             cursor_color=_c(t['btn_op']),
-            padding=[dp(14), dp(14)],
-        )
+            padding=[dp(14), dp(14)])
         self.add_widget(self._val)
 
-        # ── from / to spinners ────────────────────────────────
         units = list(CONV_CATS[self._cat].keys())
-
         unit_row = BoxLayout(size_hint=(1, None), height=dp(52),
                              orientation='horizontal', spacing=dp(10))
         from_col = BoxLayout(orientation='vertical', size_hint=(1,1))
@@ -674,60 +701,46 @@ class ConverterView(BoxLayout):
         lbl_to.bind(size=lambda *_: setattr(
             lbl_to,'text_size',(lbl_to.width,None)))
 
-        self._from = Spinner(
-            text=units[0], values=units,
-            font_size=dp(14),
-            background_normal='',
-            background_color=_c(t['btn_fn']),
-            color=_c(t['conv_text']),
-            size_hint=(1, 1))
-        self._to = Spinner(
-            text=units[1] if len(units)>1 else units[0],
-            values=units, font_size=dp(14),
-            background_normal='',
-            background_color=_c(t['btn_fn']),
-            color=_c(t['conv_text']),
-            size_hint=(1, 1))
+        self._from = Spinner(text=units[0], values=units,
+                             font_size=dp(14), background_normal='',
+                             background_color=_c(t['btn_fn']),
+                             color=_c(t['conv_text']), size_hint=(1, 1))
+        self._to   = Spinner(text=units[1] if len(units)>1 else units[0],
+                             values=units, font_size=dp(14),
+                             background_normal='',
+                             background_color=_c(t['btn_fn']),
+                             color=_c(t['conv_text']), size_hint=(1, 1))
 
-        from_col.add_widget(lbl_from)
-        from_col.add_widget(self._from)
-        to_col.add_widget(lbl_to)
-        to_col.add_widget(self._to)
+        from_col.add_widget(lbl_from); from_col.add_widget(self._from)
+        to_col.add_widget(lbl_to);     to_col.add_widget(self._to)
 
         arr = Label(text='>>', font_size=dp(16), bold=True,
-                    color=_c(t['btn_op']),
-                    size_hint=(None,1), width=dp(28))
+                    color=_c(t['btn_op']), size_hint=(None,1), width=dp(28))
         unit_row.add_widget(from_col)
         unit_row.add_widget(arr)
         unit_row.add_widget(to_col)
         self.add_widget(unit_row)
         self._arr = arr
 
-        # ── convert button ────────────────────────────────────
         self._go = Tile(t['btn_op'], t['op_text'], 'Convert',
                         fsz=15, r=14, size_hint=(1, None))
         self._go.height = dp(48)
         self._go.bind(on_press=lambda *_: self._do())
         self.add_widget(self._go)
 
-        # ── result card ───────────────────────────────────────
-        self._res_card = BoxLayout(
-            orientation='vertical', size_hint=(1, 1),
-            padding=[dp(14), dp(10)])
+        self._res_card = BoxLayout(orientation='vertical', size_hint=(1, 1),
+                                   padding=[dp(14), dp(10)])
         self._res_card.bind(pos=self._res_bg, size=self._res_bg)
-
-        self._res_lbl = Label(
-            text='', font_size=dp(28), bold=True,
-            halign='center', valign='middle',
-            color=_c(t['result_text']), size_hint=(1, 1))
+        self._res_lbl = Label(text='', font_size=dp(28), bold=True,
+                              halign='center', valign='middle',
+                              color=_c(t['result_text']), size_hint=(1, 1))
         self._res_lbl.bind(size=lambda *_: setattr(
             self._res_lbl, 'text_size', (self._res_lbl.width, None)))
         self._res_card.add_widget(self._res_lbl)
         self.add_widget(self._res_card)
 
         self.bind(pos=self._bg, size=self._bg)
-        self._bg()
-        self._highlight()
+        self._bg(); self._highlight()
 
     def _chip_draw(self, b):
         b.canvas.before.clear()
@@ -740,8 +753,7 @@ class ConverterView(BoxLayout):
             RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(10)])
 
     def _highlight(self):
-        for b in self._chip_btns.values():
-            self._chip_draw(b)
+        for b in self._chip_btns.values(): self._chip_draw(b)
 
     def _set_cat(self, cat):
         self._cat = cat
@@ -749,16 +761,13 @@ class ConverterView(BoxLayout):
         self._from.values = self._to.values = units
         self._from.text = units[0]
         self._to.text   = units[1] if len(units)>1 else units[0]
-        self._res_lbl.text = ''
-        self._highlight()
+        self._res_lbl.text = ''; self._highlight()
 
     def _do(self):
         try:
-            # convert input to float; if overflow occurs it becomes inf
             val = float(self._val.text or '0')
             res = _convert(val, self._from.text, self._to.text, self._cat)
             out = _format_result(res)
-            # display original input as typed (could be huge) and formatted output
             self._res_lbl.text = (
                 f'{self._val.text or val} {self._from.text}\n= {out} {self._to.text}')
         except Exception as e:
@@ -779,15 +788,15 @@ class ConverterView(BoxLayout):
 
     def apply(self, t):
         self._t = t
-        self._val.background_color = _c(t['conv_input'])
-        self._val.foreground_color = _c(t['conv_text'])
+        self._val.background_color  = _c(t['conv_input'])
+        self._val.foreground_color  = _c(t['conv_text'])
         self._from.background_color = _c(t['btn_fn'])
-        self._from.color = _c(t['conv_text'])
-        self._to.background_color = _c(t['btn_fn'])
-        self._to.color = _c(t['conv_text'])
-        self._arr.color = _c(t['btn_op'])
-        self._res_lbl.color = _c(t['result_text'])
-        self._in_lbl.color = _c(t['fn_text'])
+        self._from.color            = _c(t['conv_text'])
+        self._to.background_color   = _c(t['btn_fn'])
+        self._to.color              = _c(t['conv_text'])
+        self._arr.color             = _c(t['btn_op'])
+        self._res_lbl.color         = _c(t['result_text'])
+        self._in_lbl.color          = _c(t['fn_text'])
         self._go.recolor(t['btn_op'], t['op_text'])
         self._bg(); self._res_bg(); self._highlight()
 
@@ -806,31 +815,27 @@ MAIN_ROWS = [
 class CalcPage(BoxLayout):
     def __init__(self, t, toggle_cb, **kw):
         super().__init__(orientation='vertical', **kw)
-        self._t        = t
-        self._e        = ''
-        self._jr       = False
-        self._sci_open = False
-        self._hist_open= False
-        self._tiles    = []
+        self._t         = t
+        self._e         = ''
+        self._jr        = False
+        self._sci_open  = False
+        self._hist_open = False
+        self._tiles     = []
 
-        self._disp = Display(t, toggle_cb, size_hint=(1, 0.27))
+        self._disp = Display(t, toggle_cb, size_hint=(1, 0.30))
         self.add_widget(self._disp)
 
-        # sci tray
         self._tray = SciTray(t, self._sci_key,
                              size_hint=(1, None), height=0, opacity=0)
         self.add_widget(self._tray)
 
-        # history panel
         self._hist = HistoryPanel(t, self._close_hist,
                                   size_hint=(1, None), height=0, opacity=0)
         self.add_widget(self._hist)
 
-        # button grid
         self._grid = BoxLayout(
             orientation='vertical', size_hint=(1, 1),
-            padding=[dp(11), dp(5), dp(11), dp(16)],
-            spacing=dp(8))
+            padding=[dp(11), dp(5), dp(11), dp(16)], spacing=dp(8))
         self._build_grid()
         self.add_widget(self._grid)
 
@@ -873,40 +878,32 @@ class CalcPage(BoxLayout):
             Color(*_c(self._t['bg']))
             Rectangle(pos=self.pos, size=self.size)
 
-    # ── tray / history toggle ─────────────────────────────────
     def _open_sci(self):
         if self._hist_open: self._close_hist_anim()
         self._sci_open = not self._sci_open
         h  = dp(118) if self._sci_open else 0
         op = 1.0     if self._sci_open else 0.0
-        Animation(height=h, opacity=op,
-                  duration=0.2, t='out_cubic').start(self._tray)
+        Animation(height=h, opacity=op, duration=0.2, t='out_cubic').start(self._tray)
 
     def _close_hist_anim(self):
         self._hist_open = False
-        Animation(height=0, opacity=0,
-                  duration=0.18, t='out_cubic').start(self._hist)
+        Animation(height=0, opacity=0, duration=0.18, t='out_cubic').start(self._hist)
 
     def _open_hist(self):
-        if self._sci_open: self._open_sci()   # close sci first
+        if self._sci_open: self._open_sci()
         self._hist_open = not self._hist_open
         if self._hist_open: self._hist.refresh()
         h  = dp(200) if self._hist_open else 0
         op = 1.0     if self._hist_open else 0.0
-        Animation(height=h, opacity=op,
-                  duration=0.2, t='out_cubic').start(self._hist)
+        Animation(height=h, opacity=op, duration=0.2, t='out_cubic').start(self._hist)
 
     def _close_hist(self):
         self._hist_open = False
-        Animation(height=0, opacity=0,
-                  duration=0.18, t='out_cubic').start(self._hist)
+        Animation(height=0, opacity=0, duration=0.18, t='out_cubic').start(self._hist)
 
-    # ── theme ─────────────────────────────────────────────────
     def apply_theme(self, t):
         self._t = t
-        self._disp.apply(t)
-        self._tray.apply(t)
-        self._hist.apply(t)
+        self._disp.apply(t); self._tray.apply(t); self._hist.apply(t)
         self._bg()
         lu = {
             'num':  (t['btn_num'], t['num_text']),
@@ -922,7 +919,6 @@ class CalcPage(BoxLayout):
     def get_display_text(self):
         return self._disp.result.text
 
-    # ── key logic ─────────────────────────────────────────────
     def _key(self, key):
         if key == 'SCI':  self._open_sci();  return
         if key == 'HIST': self._open_hist(); return
@@ -985,36 +981,27 @@ class CalcPage(BoxLayout):
             elif fn=='ln':   res = math.log(val)
             elif fn=='x^y':
                 D.expr.text = f'{ex} ^'; self._e = ex + ' ^ '; return
-            elif fn=='√': res = math.sqrt(val)
+            elif fn=='sqrt': res = math.sqrt(val)
             elif fn=='1/x':  res = 1 / val
             elif fn=='x!':   res = float(math.factorial(int(val)))
             elif fn=='%':
-                # If there is an existing expression ending with a number or ')',
-                # treat '%' as an infix modulus operator; otherwise treat as
-                # percentage-of-value (val/100).
                 s = (self._e or '').rstrip()
                 last = s[-1] if s else None
                 if last and (last.isdigit() or last == ')'):
-                    # insert modulus operator with spacing so parser sees it
                     self._e = (self._e or '') + ' % '
-                    D.result.text = self._e.strip() or '0'
-                    return
+                    D.result.text = self._e.strip() or '0'; return
                 res = val / 100
             elif fn == '(' or fn == ')':
-                # insert parentheses into the expression
-                # be robust if self._e contains only whitespace
                 s = (self._e or '').rstrip()
                 last = s[-1] if s else None
                 if fn == '(':
-                    # implicit multiplication if previous token is a number or a closing paren
                     if last and (last.isdigit() or last == ')'):
                         self._e = (self._e or '') + '*('
                     else:
                         self._e = (self._e or '') + '('
                 else:
                     self._e = (self._e or '') + ')'
-                D.result.text = self._e.strip() or '0'
-                return
+                D.result.text = self._e.strip() or '0'; return
             else: return
             label = f'{fn}({ex})'
             out   = _format_result(res)
@@ -1029,15 +1016,10 @@ class CalcPage(BoxLayout):
         expr = self._e.strip()
         if not expr: return
         self._disp.expr.text = expr
-        
-        # ─── DEBUG LOG ───
-        print(f"[QA TEST] Spinner set to: {CURRENT_PARADIGM}")
-        print(f"[QA TEST] Expression sent: {expr}")
-
+        print(f"[QA] Paradigm: {CURRENT_PARADIGM}  |  Expr: {expr}")
         try:
             r   = _interpret(expr)
             out = _format_result(r)
-            # prefix the history record with the paradigm for clarity
             hist_record(f"[{CURRENT_PARADIGM}] {expr}", r)
             self._disp.result.text = out
             self._e = out; self._jr = True
@@ -1063,10 +1045,9 @@ class TabBar(BoxLayout):
         self.spacing = dp(0)
 
         for label in ['Calculator', 'Converter']:
-            b = Button(
-                text=label, font_size=dp(13), bold=True,
-                size_hint=(1, 1),
-                background_normal='', background_color=(0,0,0,0))
+            b = Button(text=label, font_size=dp(13), bold=True,
+                       size_hint=(1, 1),
+                       background_normal='', background_color=(0,0,0,0))
             b.bind(on_press=lambda btn, l=label: self._tap(l))
             b.bind(pos=self._bg, size=self._bg)
             self._btns[label] = b
@@ -1084,7 +1065,6 @@ class TabBar(BoxLayout):
             on = (lbl == self._active)
             b.color = _c(self._t['tab_text_on' if on else 'tab_text_off'])
             b.bold  = on
-        # Redraw background to move the active underline immediately
         self._bg()
 
     def _bg(self, *_):
@@ -1111,13 +1091,12 @@ class CalqRoot(FloatLayout):
 
     def __init__(self, **kw):
         super().__init__(**kw)
-        self._t         = DARK
+        self._t = DARK
         self._build()
 
     def _build(self):
         self._shell = BoxLayout(orientation='vertical',
                                 size_hint=(1, 1), pos=(0, 0))
-
         self._tabs = TabBar(self._t, self._on_tab)
         self._shell.add_widget(self._tabs)
 
@@ -1129,7 +1108,6 @@ class CalqRoot(FloatLayout):
         self.add_widget(self._shell)
 
     def _on_tab(self, label):
-        # Ensure the tab bar reflects the active page when switching
         try:
             self._tabs._active = label
             self._tabs._update()
@@ -1145,13 +1123,6 @@ class CalqRoot(FloatLayout):
         self._calc.apply_theme(self._t)
         self._conv.apply(self._t)
 
-
-# ──────────────────────────────────────────────────────────────
-#  DISPATCHER (delegates based on spinner choice)
-# ──────────────────────────────────────────────────────────────
-# The UI no longer uses _run directly; the CalcPage._eval method
-# calls _interpret (defined earlier) which respects the current
-# paradigm selection.  We keep _run around for legacy references.
 
 def _run(expr: str) -> float:
     return _interpret(expr)
