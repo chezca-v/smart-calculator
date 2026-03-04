@@ -65,14 +65,6 @@ def square_root(n: float) -> float:
     _record(f"sqrt({n})", result)
     return result
 
-
-def percentage(value: float, percent: float) -> float:
-    """Return what percent% of value is, e.g. percentage(200, 15) = 30."""
-    result = (value * percent) / 100.0
-    _record(f"{value} x {percent}%", result)
-    return result
-
-
 # ── AST-based expression evaluator ───────────────────────────
 # A safe general-purpose evaluator used by calculate() below.
 # Uses Python's ast module to parse the expression into a tree,
@@ -133,4 +125,5 @@ def calculate(expression: str) -> float:
         raise ValueError(f"Invalid expression: {expression}")
 
     _record(expression, result)
+
     return result
